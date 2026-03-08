@@ -1,0 +1,27 @@
+sample_id,material,batch,resolution_um,voxel_size,volume_mm3,porosity,fiber_count,contact_count,contact_density,mean_diameter_um,std_diameter_um,mean_length_um,std_length_um,mean_curvature,orientation_dispersion,misorientation_threshold,n_directions,dilation_type,slenderness_ratio,runtime_sec,quality_score,processing_date,status,notes
+S001,PET recyclé,LOT-C,1.83,1.89,7.947,0.794,1427,2965,373.1,27.31,6.0,770.0,244.0,0.0257,33.28,12.0,61,longitudinal,28.19,822.9,4,2025-08-04,in_progress,
+S002,Cuivre,LOT-B,3.93,4.091,6.811,0.647,935,1421,208.63,19.37,5.33,733.7,156.6,0.0439,52.17,2.0,13,isotropic,37.88,563.9,1,2025-06-20,completed,Slight edge artifacts
+S003,Verre,LOT-B,13.98,14.765,4.361,0.55,2780,4712,1080.49,9.92,1.38,972.2,157.5,0.0427,30.45,6.0,61,isotropic,98.0,2789.4,1,2025-11-05,in_progress,High quality scan
+S004,Verre,LOT-B,15.15,15.026,8.233,0.453,2970,6551,795.7,8.69,1.41,874.7,139.2,0.0031,26.18,4.0,37,isotropic,100.66,1047.2,2,2025-08-27,failed,Automatic pipeline
+S005,Chanvre,LOT-A,19.38,19.646,2.086,0.896,1764,3501,1678.33,33.57,8.58,1910.5,547.4,0.0099,40.18,16.0,37,isotropic,56.91,1127.8,4,2025-07-17,completed,Manual quality check passed
+S006,Nylon,LOT-A,7.19,6.672,0.716,0.651,1369,1175,1641.06,13.64,4.02,836.4,254.4,0.0126,19.66,2.0,37,isotropic,61.32,1037.0,5,2025-06-16,completed,Manual quality check passed
+S007,PET recyclé,LOT-B,8.04,7.42,1.355,0.511,1073,3252,2400.0,17.65,3.53,723.0,91.3,0.0132,12.69,6.0,49,isotropic,40.96,1029.8,3,2025-01-31,completed,Re-processed after calibration
+S008,Carbone,LOT-C,9.92,10.254,7.362,0.568,1857,5978,812.01,5.08,0.65,983.1,114.7,0.029,31.28,12.0,61,isotropic,193.52,2452.2,5,2025-02-05,completed,Slight edge artifacts
+S009,Nylon,LOT-A,4.6,4.573,4.888,0.719,1793,2113,432.28,15.52,1.6,813.6,202.3,0.0214,27.93,14.0,49,longitudinal,52.42,2147.8,2,2025-07-18,failed,
+S010,Cuivre,LOT-C,3.47,3.515,2.032,0.497,919,2109,1037.89,26.32,3.84,622.8,85.0,0.0034,17.79,12.0,61,longitudinal,23.66,958.9,5,2025-01-16,completed,
+S011,Chanvre,LOT-C,10.04,10.572,5.26,0.871,117,127,24.14,31.28,3.95,3007.0,920.6,0.0193,25.21,18.0,61,isotropic,96.13,2451.6,5,2025-01-27,completed,Slight edge artifacts
+S012,PET recyclé,LOT-A,5.31,5.453,1.947,0.817,497,1299,667.18,24.29,5.72,944.0,167.6,0.0267,25.15,20.0,13,longitudinal,38.86,588.4,5,2025-03-21,completed,
+S013,PET recyclé,LOT-B,13.73,13.877,7.115,0.796,2878,4487,630.64,26.71,3.32,589.1,80.1,0.006,23.01,4.0,25,isotropic,22.06,1004.7,4,2025-10-07,completed,"Fiber bundle detected, split manually"
+S014,PET recyclé,LOT-A,9.31,9.42,4.738,0.638,1283,3310,698.61,32.84,6.61,662.6,218.8,0.0418,25.87,20.0,49,isotropic,20.18,2084.7,5,2025-06-01,completed,High quality scan
+S015,PET recyclé,LOT-C,16.82,16.16,4.12,0.745,1473,4069,987.62,26.32,6.29,509.8,72.1,0.0035,42.72,14.0,37,longitudinal,19.37,849.1,1,2025-08-15,in_progress,High quality scan
+S016,Cuivre,LOT-C,14.31,12.967,3.364,0.721,1428,4105,1220.27,18.36,3.97,540.9,92.6,0.0463,21.33,14.0,13,isotropic,29.46,762.2,3,2025-05-18,completed,Slight edge artifacts
+S017,Nylon,LOT-B,6.93,6.842,6.488,0.757,2359,2573,396.58,18.32,2.56,847.3,117.3,0.0059,57.19,2.0,13,longitudinal,46.25,729.5,2,2025-03-07,in_progress,Manual quality check passed
+S018,Chanvre,LOT-A,16.81,15.85,3.937,0.446,241,788,200.15,33.43,8.72,2482.3,319.9,0.0423,55.4,14.0,37,isotropic,74.25,1163.1,4,2025-05-06,completed,Manual quality check passed
+S019,Verre,LOT-C,16.29,15.992,1.333,0.629,294,417,312.83,13.07,3.18,868.8,91.5,0.0452,31.45,16.0,49,longitudinal,66.47,690.4,5,2025-02-11,failed,
+S020,Cuivre,LOT-B,8.36,8.951,1.621,0.423,864,778,479.95,20.73,5.14,534.6,60.9,0.049,23.06,12.0,13,longitudinal,25.79,728.5,4,2025-09-03,completed,
+S021,Verre,LOT-C,6.48,6.135,9.638,0.672,1486,3414,354.22,7.55,0.95,613.5,88.1,0.0403,34.45,2.0,13,isotropic,81.26,259.6,5,2025-03-11,completed,High quality scan
+S022,Carbone,LOT-C,13.97,12.736,9.132,0.581,2030,3657,400.46,4.95,0.62,1167.5,132.3,0.0392,51.67,12.0,13,isotropic,235.86,757.1,3,2025-05-07,completed,
+S023,Chanvre,LOT-C,3.66,3.5,7.147,0.479,1498,4554,637.19,43.21,12.34,1575.0,390.3,0.0325,40.89,20.0,37,longitudinal,36.45,842.2,5,2025-11-05,completed,Manual quality check passed
+S024,PET recyclé,LOT-C,4.8,4.602,3.026,0.457,1351,4029,1331.46,35.34,6.34,631.2,170.5,0.0392,49.24,16.0,13,isotropic,17.86,541.7,3,2025-07-11,in_progress,
+S025,Cuivre,LOT-A,1.14,1.177,9.707,0.723,2817,4665,480.58,19.28,3.09,512.3,101.6,0.0076,34.3,4.0,37,isotropic,26.57,1145.1,3,2025-06-01,completed,
+S026,Verre,LOT-B,15.95,16.132,7.898,0.494,525,1770,224.11,9.23,1.82,983.0,176.4,0.0273,39.81,20.0,37,longitudinal,106.5,1497.1,5,2025-06-26,failed,"Fiber bundle detected, split manually"

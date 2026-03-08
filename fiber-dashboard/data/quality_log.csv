@@ -1,0 +1,67 @@
+log_id,sample_id,issue_type,severity,description,detected_by,resolved
+L00001,S001,ok,low,No issues detected,manual,True
+L00002,S001,incomplete_volume,low,Partial fiber bundle at Z boundary,auto,False
+L00003,S001,incomplete_volume,low,Missing slices in stack,auto,True
+L00004,S002,segmentation_error,low,Background misclassified as fiber,auto,True
+L00005,S002,artifact,low,Bright ring artifact near volume boundary,auto,False
+L00006,S003,ok,low,No issues detected,auto,True
+L00007,S003,incomplete_volume,low,Missing slices in stack,auto,True
+L00008,S003,ok,low,Passed all quality checks,auto,False
+L00009,S003,oversized_object,low,Bundle of parallel fibers merged,auto,True
+L00010,S004,ok,low,Passed all quality checks,manual,False
+L00011,S004,ok,low,No issues detected,manual,False
+L00012,S005,ok,low,No issues detected,auto,True
+L00013,S005,artifact,medium,Beam hardening artifact detected,manual,True
+L00014,S005,ok,low,No issues detected,manual,True
+L00015,S005,low_contrast,medium,Low contrast between fiber and matrix,manual,True
+L00016,S006,noise,medium,Gaussian noise above 5%,auto,True
+L00017,S006,segmentation_error,low,"Threshold too high, fibers merged",auto,True
+L00018,S007,ok,low,Passed all quality checks,auto,False
+L00019,S007,ok,low,Passed all quality checks,auto,False
+L00020,S008,low_contrast,medium,Fiber boundary poorly defined,auto,False
+L00021,S008,low_contrast,high,Scan underexposed,manual,True
+L00022,S008,artifact,medium,Bright ring artifact near volume boundary,auto,True
+L00023,S008,ok,low,Clean scan,auto,False
+L00024,S009,segmentation_error,medium,Background misclassified as fiber,manual,False
+L00025,S009,incomplete_volume,medium,Missing slices in stack,manual,True
+L00026,S009,oversized_object,medium,Large cluster not separated,auto,False
+L00027,S009,low_contrast,low,Scan underexposed,auto,True
+L00028,S010,ok,low,No issues detected,manual,False
+L00029,S010,incomplete_volume,medium,Missing slices in stack,auto,True
+L00030,S010,low_contrast,low,Scan underexposed,auto,True
+L00031,S011,low_contrast,medium,Fiber boundary poorly defined,auto,True
+L00032,S012,incomplete_volume,low,Missing slices in stack,auto,True
+L00033,S012,artifact,low,Beam hardening artifact detected,manual,False
+L00034,S012,low_contrast,low,Fiber boundary poorly defined,manual,True
+L00035,S012,segmentation_error,medium,"Threshold too high, fibers merged",auto,True
+L00036,S013,incomplete_volume,low,Missing slices in stack,manual,True
+L00037,S013,ok,low,No issues detected,auto,True
+L00038,S014,ok,low,No issues detected,auto,False
+L00039,S014,low_contrast,low,Fiber boundary poorly defined,auto,True
+L00040,S015,ok,low,No issues detected,auto,False
+L00041,S016,artifact,high,Beam hardening artifact detected,auto,False
+L00042,S016,ok,low,No issues detected,auto,True
+L00043,S016,low_contrast,low,Low contrast between fiber and matrix,auto,True
+L00044,S016,segmentation_error,low,"Threshold too high, fibers merged",auto,True
+L00045,S017,ok,low,Passed all quality checks,auto,False
+L00046,S018,noise,high,Gaussian noise above 5%,manual,False
+L00047,S018,low_contrast,low,Scan underexposed,auto,True
+L00048,S019,ok,low,Clean scan,manual,True
+L00049,S019,segmentation_error,medium,Background misclassified as fiber,auto,True
+L00050,S019,low_contrast,low,Low contrast between fiber and matrix,auto,True
+L00051,S020,oversized_object,low,Bundle of parallel fibers merged,auto,True
+L00052,S020,incomplete_volume,low,Partial fiber bundle at Z boundary,auto,False
+L00053,S020,ok,low,No issues detected,auto,True
+L00054,S020,ok,low,Clean scan,auto,True
+L00055,S021,oversized_object,low,Bundle of parallel fibers merged,auto,False
+L00056,S021,artifact,low,Motion artifact from scanner vibration,auto,False
+L00057,S022,ok,low,Clean scan,manual,True
+L00058,S023,oversized_object,low,Binder blob included in fiber segment,auto,True
+L00059,S024,artifact,low,Bright ring artifact near volume boundary,auto,False
+L00060,S025,segmentation_error,medium,Watershed over-segmentation,auto,False
+L00061,S025,ok,low,Clean scan,auto,False
+L00062,S025,ok,low,No issues detected,auto,False
+L00063,S025,ok,low,Clean scan,manual,True
+L00064,S026,ok,low,Clean scan,manual,True
+L00065,S026,artifact,medium,Bright ring artifact near volume boundary,manual,False
+L00066,S026,noise,high,Salt-and-pepper noise in background,auto,True
