@@ -1070,7 +1070,7 @@ def update_acoustic_options(store_data, search, _n_all, _n_none, current_val):
 @app.callback(
     Output("graph-absorption", "figure"),
     Input("acou-checklist",  "value"),
-    State("acou-data-store", "data"),
+    Input("acou-data-store", "data"),
 )
 def update_absorption_graph(selected_ids, store_data):
     records      = store_data or []
@@ -1078,8 +1078,14 @@ def update_absorption_graph(selected_ids, store_data):
 
     if not records:
         return _empty_fig("Données d'absorption acoustique non disponibles")
+
+    # Auto-sélectionner le premier échantillon si rien n'est sélectionné
     if not selected_ids:
-        return _empty_fig("Sélectionnez au moins un échantillon dans la liste à droite →")
+        all_ids = [str(r["sample_id"]) for r in records]
+        if all_ids:
+            selected_ids = [all_ids[0]]
+        else:
+            return _empty_fig("Sélectionnez au moins un échantillon dans la liste à droite →")
 
     mats_idx = {}
     for rec in records:
