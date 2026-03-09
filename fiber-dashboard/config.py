@@ -4,97 +4,121 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
 DATA_FILES = {
-    "samples": os.path.join(DATA_DIR, "samples.csv"),
-    "fibers": os.path.join(DATA_DIR, "fibers.csv"),
-    "contacts": os.path.join(DATA_DIR, "contacts.csv"),
-    "parameter_sweep": os.path.join(DATA_DIR, "parameter_sweep.csv"),
-    "robustness": os.path.join(DATA_DIR, "robustness.csv"),
+    "samples":          os.path.join(DATA_DIR, "samples.csv"),
+    "fibers":           os.path.join(DATA_DIR, "fibers.csv"),
+    "contacts":         os.path.join(DATA_DIR, "contacts.csv"),
+    "parameter_sweep":  os.path.join(DATA_DIR, "parameter_sweep.csv"),
+    "robustness":       os.path.join(DATA_DIR, "robustness.csv"),
     "acoustic_thermal": os.path.join(DATA_DIR, "acoustic_thermal.csv"),
-    "quality_log": os.path.join(DATA_DIR, "quality_log.csv"),
+    "quality_log":      os.path.join(DATA_DIR, "quality_log.csv"),
 }
 
+# ── Palette principale (thème clair professionnel) ───────────────────────────
 COLORS = {
-    "primary": "#2E86AB",
-    "accent": "#F24236",
-    "success": "#2ECC71",
-    "warning": "#F39C12",
-    "neutral": "#8B9BB4",
-    "bg_dark": "#0F1117",
-    "bg_card": "#1A1D2E",
-    "bg_sidebar": "#141623",
-    "border": "#2A2D3E",
-    "text_primary": "#E8EAF0",
-    "text_secondary": "#8B9BB4",
+    "primary":          "#2563EB",   # bleu vif principal
+    "primary_light":    "#EFF6FF",   # fond bleu très léger
+    "primary_mid":      "#BFDBFE",   # bordure bleue légère
+    "accent":           "#0EA5E9",   # bleu ciel secondaire
+    "success":          "#10B981",   # vert émeraude
+    "warning":          "#F59E0B",   # ambre
+    "danger":           "#EF4444",   # rouge
+    "neutral":          "#64748B",   # ardoise
+
+    # Backgrounds
+    "bg_page":          "#F1F5F9",   # fond de page (gris-bleu clair)
+    "bg_card":          "#FFFFFF",   # fond des cartes
+    "bg_sidebar":       "#1E2D40",   # sidebar marine foncée
+    "bg_input":         "#FFFFFF",   # fond des inputs
+
+    # Borders
+    "border":           "#E2E8F0",   # bordure légère
+    "border_strong":    "#CBD5E1",   # bordure plus visible
+
+    # Text
+    "text_primary":     "#0F172A",   # texte foncé principal
+    "text_secondary":   "#64748B",   # texte secondaire
+    "text_muted":       "#94A3B8",   # texte atténué
+    "text_sidebar":     "#94A3B8",   # texte sidebar
 }
 
+# ── Couleurs par matériau ────────────────────────────────────────────────────
 MATERIAL_COLORS = {
-    "Nylon": "#2E86AB",
-    "Carbone": "#F24236",
-    "Verre": "#2ECC71",
-    "Cuivre": "#E67E22",
-    "PET recyclé": "#9B59B6",
-    "Chanvre": "#27AE60",
+    "Nylon":        "#2563EB",   # bleu
+    "Carbone":      "#EF4444",   # rouge
+    "Verre":        "#10B981",   # vert émeraude
+    "Cuivre":       "#F59E0B",   # ambre
+    "PET recyclé":  "#8B5CF6",   # violet
+    "Chanvre":      "#059669",   # vert foncé
 }
 
+# ── Template Plotly (thème clair) ────────────────────────────────────────────
 PLOTLY_TEMPLATE = {
     "layout": {
-        "paper_bgcolor": COLORS["bg_card"],
-        "plot_bgcolor": COLORS["bg_dark"],
-        "font": {"color": COLORS["text_primary"], "family": "Inter, system-ui, sans-serif", "size": 12},
+        "paper_bgcolor": "#FFFFFF",
+        "plot_bgcolor":  "#F8FAFD",
+        "font": {
+            "color":  "#0F172A",
+            "family": "Inter, system-ui, sans-serif",
+            "size":   12,
+        },
         "colorway": list(MATERIAL_COLORS.values()),
         "xaxis": {
-            "gridcolor": COLORS["border"],
-            "linecolor": COLORS["border"],
-            "tickcolor": COLORS["text_secondary"],
+            "gridcolor":     "#E8EEF6",
+            "linecolor":     "#CBD5E1",
+            "tickcolor":     "#64748B",
+            "zerolinecolor": "#E2E8F0",
         },
         "yaxis": {
-            "gridcolor": COLORS["border"],
-            "linecolor": COLORS["border"],
-            "tickcolor": COLORS["text_secondary"],
+            "gridcolor":     "#E8EEF6",
+            "linecolor":     "#CBD5E1",
+            "tickcolor":     "#64748B",
+            "zerolinecolor": "#E2E8F0",
         },
         "legend": {
-            "bgcolor": "rgba(0,0,0,0)",
-            "bordercolor": COLORS["border"],
+            "bgcolor":     "rgba(255,255,255,0.95)",
+            "bordercolor": "#E2E8F0",
+            "borderwidth": 1,
         },
-        "margin": {"t": 40, "r": 20, "b": 40, "l": 50},
+        "margin": {"t": 40, "r": 20, "b": 40, "l": 55},
         "hoverlabel": {
-            "bgcolor": COLORS["bg_card"],
-            "bordercolor": COLORS["primary"],
-            "font": {"color": COLORS["text_primary"]},
+            "bgcolor":    "#FFFFFF",
+            "bordercolor": "#2563EB",
+            "font": {"color": "#0F172A"},
         },
     }
 }
 
 MATERIALS = ["Nylon", "Carbone", "Verre", "Cuivre", "PET recyclé", "Chanvre"]
-BATCHES = ["LOT-A", "LOT-B", "LOT-C"]
-STATUSES = ["completed", "in_progress", "failed"]
+BATCHES   = ["LOT-A", "LOT-B", "LOT-C"]
+STATUSES  = ["completed", "in_progress", "failed"]
 
 TABLE_STYLE = {
     "style_header": {
-        "backgroundColor": COLORS["bg_sidebar"],
-        "color": COLORS["text_primary"],
-        "fontWeight": "600",
-        "borderBottom": f"1px solid {COLORS['primary']}",
-        "fontFamily": "Inter, system-ui, sans-serif",
-        "fontSize": "13px",
+        "backgroundColor": "#F8FAFC",
+        "color":           "#0F172A",
+        "fontWeight":      "600",
+        "borderBottom":    "2px solid #E2E8F0",
+        "fontFamily":      "Inter, system-ui, sans-serif",
+        "fontSize":        "12px",
+        "padding":         "10px 14px",
     },
     "style_cell": {
-        "backgroundColor": COLORS["bg_card"],
-        "color": COLORS["text_primary"],
-        "borderBottom": f"1px solid {COLORS['border']}",
-        "fontFamily": "Inter, system-ui, sans-serif",
-        "fontSize": "12px",
-        "padding": "8px 12px",
+        "backgroundColor": "#FFFFFF",
+        "color":           "#0F172A",
+        "borderBottom":    "1px solid #E2E8F0",
+        "fontFamily":      "Inter, system-ui, sans-serif",
+        "fontSize":        "12px",
+        "padding":         "9px 14px",
     },
     "style_data_conditional": [
         {
             "if": {"row_index": "odd"},
-            "backgroundColor": COLORS["bg_dark"],
+            "backgroundColor": "#F8FAFC",
         }
     ],
 }
 
-APP_TITLE = "FiberScope"
+APP_TITLE    = "FiberScope"
 APP_SUBTITLE = "MSME — UMR 8208 CNRS · Université Gustave Eiffel"
-PORT = int(os.environ.get("PORT", 8050))
+PORT  = int(os.environ.get("PORT", 8050))
 DEBUG = os.environ.get("DEBUG", "false").lower() == "true"

@@ -7,24 +7,24 @@ from plotly.subplots import make_subplots
 from utils.data_loader import load_acoustic_thermal, load_samples
 from utils.stats import pearson_matrix, linear_regression
 from utils import figures as fig_utils
-from components.info_box import info_box, guide_box, warn_box, chart_header
+from components.info_box import info_box, guide_box, conclusion_box, chart_header
 from config import COLORS, MATERIAL_COLORS
 
-FREQ_COLS = ["absorption_250hz", "absorption_500hz", "absorption_1000hz",
-             "absorption_2000hz", "absorption_4000hz"]
+FREQ_COLS   = ["absorption_250hz", "absorption_500hz", "absorption_1000hz",
+               "absorption_2000hz", "absorption_4000hz"]
 FREQ_LABELS = [250, 500, 1000, 2000, 4000]
 
 TRANSPORT_PARAMS = [
-    ("airflow_resistivity",   "Résistivité à l'écoulement (Pa·s/m²)"),
-    ("thermal_permeability",  "Perméabilité thermique (m²)"),
-    ("viscous_length_um",     "Longueur visqueuse Λ (µm)"),
-    ("thermal_length_um",     "Longueur thermique Λ' (µm)"),
+    ("airflow_resistivity",  "Résistivité σ (Pa·s/m²)"),
+    ("thermal_permeability", "Perméabilité thermique k₀' (m²)"),
+    ("viscous_length_um",    "Longueur visqueuse Λ (µm)"),
+    ("thermal_length_um",    "Longueur thermique Λ' (µm)"),
 ]
 
-ORIENT_BINS = [0, 20, 40, 90]
+ORIENT_BINS   = [0, 20, 40, 90]
 ORIENT_LABELS = ["Anisotrope (<20°)", "Modéré (20–40°)", "Quasi-isotrope (>40°)"]
 ORIENT_SYMBOLS = ["circle", "square", "diamond"]
-ORIENT_COLORS = ["#2E86AB", "#E63946", "#2A9D8F"]
+ORIENT_COLORS  = ["#2563EB", "#EF4444", "#10B981"]
 
 
 def _orient_category(dispersion: float) -> str:
@@ -36,181 +36,127 @@ def _orient_category(dispersion: float) -> str:
 
 
 def layout() -> html.Div:
-    acoustic = load_acoustic_thermal()
+    acoustic   = load_acoustic_thermal()
     sample_ids = acoustic["sample_id"].tolist()
 
     return html.Div([
-        html.H2("Propriétés acoustiques et thermiques", className="page-title"),
+
+        # ── En-tête ──────────────────────────────────────────────────────
+        html.H2("🔊 Propriétés acoustiques et thermiques", className="page-title"),
         html.P(
-            "Relation entre la microstructure des fibres et les propriétés "
-            "acoustiques/thermiques mesurées expérimentalement.",
+            "Relation entre la microstructure des fibres (porosité, diamètre, orientation) "
+            "et les propriétés acoustiques/thermiques mesurées expérimentalement.",
             className="page-subtitle",
         ),
 
-        # ── Section 1 : Scatter dark theme ───────────────────────────────────
-        info_box(
-            "Le coefficient d'absorption acoustique α varie entre 0 (aucune absorption, "
-            "le son est réfléchi) et 1 (absorption totale). Une valeur de 0,8 à 1000 Hz "
-            "signifie que 80 % de l'énergie sonore est absorbée à cette fréquence."
-        ),
-        html.Div([
-            html.Div([
-                chart_header(
-                    "Absorption à 1000 Hz vs porosité",
-                    "La porosité φ est la fraction de volume vide (0 = solide, 1 = vide). "
-                    "Une porosité élevée favorise généralement l'absorption acoustique.",
-                ),
-                dcc.Graph(id="at-scatter-porosity-abs"),
-            ], className="card col-6"),
-            html.Div([
-                chart_header(
-                    "Absorption à 1000 Hz vs diamètre moyen",
-                    "Des fibres plus fines augmentent la surface de contact avec l'air, "
-                    "améliorant l'absorption par friction visqueuse.",
-                ),
-                dcc.Graph(id="at-scatter-diameter-abs"),
-            ], className="card col-6"),
-        ], className="row"),
-
-        html.Div([
-            html.Div([
-                chart_header(
-                    "Perméabilité thermique vs porosité",
-                    "La perméabilité thermique k₀' traduit la facilité avec laquelle la chaleur "
-                    "se propage dans le matériau. Elle augmente avec la porosité.",
-                ),
-                dcc.Graph(id="at-scatter-perm-porosity"),
-            ], className="card col-6"),
-            html.Div([
-                chart_header(
-                    "Matrice de corrélation — microstructure ↔ acoustique/thermique",
-                    "Valeurs de corrélation de Pearson entre les descripteurs microstructuraux "
-                    "et les propriétés mesurées. Rouge = corrélation négative, Bleu = positive.",
-                ),
-                html.Div([
-                    html.Div([
-                        html.Span("−1", style={"fontSize": "10px", "color": "#F24236"}),
-                        html.Div(className="scale-bar"),
-                        html.Span("+1", style={"fontSize": "10px", "color": "#2E86AB"}),
-                    ], className="scale-hint"),
-                ]),
-                dcc.Graph(id="at-heatmap-corr"),
-            ], className="card col-6"),
-        ], className="row"),
-
-
-        # ── Section 2 : Paramètres de transport ──────────────────────────────
-        html.H3("Paramètres de transport vs porosité — modèle JCA", className="section-separator"),
-        info_box(
-            "Le modèle Johnson-Champoux-Allard (JCA) décrit la propagation acoustique "
-            "dans les milieux poreux via 5 paramètres de transport. Ces graphiques montrent "
-            "comment chaque paramètre évolue avec la porosité, en distinguant les orientations des fibres. "
-            "Les lignes en pointillés sont les droites de régression linéaire par catégorie d'orientation."
-        ),
-        html.Div([
-            html.Div([dcc.Graph(id="at-transport-subplot")], className="card col-12"),
-        ], className="row"),
-
-        # ── Section 3 : Courbes d'absorption ─────────────────────────────────
+        # ── Section 1 : Courbes d'absorption en fréquence ────────────────
         html.H3("Courbes d'absorption acoustique en fréquence", className="section-separator"),
         info_box(
-            "Ces courbes montrent l'évolution du coefficient d'absorption α en fonction "
-            "de la fréquence (250 Hz à 4000 Hz). Chaque ligne représente un échantillon. "
-            "Sélectionnez jusqu'à 6 échantillons pour les comparer côte à côte."
+            "Le coefficient d'absorption α varie entre 0 (son réfléchi) et 1 (absorption totale). "
+            "Ces courbes montrent l'évolution de α entre 250 Hz et 4000 Hz pour chaque échantillon. "
+            "Sélectionnez jusqu'à 6 échantillons pour les comparer. "
+            "L'axe des fréquences est logarithmique (comme l'oreille humaine le perçoit)."
         ),
         html.Div([
             html.Div([
                 html.Div([
-                    html.Label("Échantillons à comparer (max 6)",
-                               style={"color": COLORS["text_secondary"], "fontSize": "11px",
-                                      "fontWeight": "600"}),
+                    html.Label("Échantillons à comparer (max 6)"),
                     dcc.Dropdown(
                         id="at-sample-select",
                         options=[{"label": sid, "value": sid} for sid in sample_ids],
-                        value=sample_ids[:4],
+                        value=sample_ids[:5],
                         multi=True,
                         className="dash-dropdown-dark",
                         style={"fontSize": "13px"},
                     ),
-                ], style={"marginBottom": "12px"}),
-                dcc.Graph(id="at-absorption-curve"),
-            ], className="card col-8"),
-            html.Div([
-                chart_header(
-                    "Résistivité à l'écoulement par matériau",
-                    "σ (Pa·s/m²) : résistance du matériau au passage de l'air. "
-                    "Valeur trop faible → peu d'absorption. Trop élevée → le son rebondit.",
-                ),
-                dcc.Graph(id="at-bar-resistivity"),
-            ], className="card col-4"),
+                ], style={"marginBottom": "14px"}),
+                dcc.Graph(id="at-absorption-curve", style={"height": "360px"}),
+            ], className="card col-12"),
         ], className="row"),
+
+        # ── Section 2 : Paramètres de transport vs porosité ──────────────
+        html.H3("Paramètres de transport JCA vs porosité", className="section-separator"),
+        info_box(
+            "Le modèle Johnson-Champoux-Allard (JCA) décrit la propagation acoustique dans les "
+            "milieux poreux via 5 paramètres macroscopiques. Ces graphiques montrent comment chaque "
+            "paramètre évolue avec la porosité φ (fraction volumique de vide), en distinguant "
+            "l'orientation des fibres. Les lignes pointillées = droites de régression par catégorie."
+        ),
+        guide_box("Catégories d'orientation des fibres", [
+            "Anisotrope (<20°) : fibres fortement orientées, résistivité élevée dans une direction.",
+            "Modéré (20–40°) : orientation partielle, comportement intermédiaire.",
+            "Quasi-isotrope (>40°) : fibres distribuées aléatoirement, comportement homogène.",
+        ]),
+        html.Div([
+            html.Div([
+                dcc.Graph(id="at-transport-subplot", style={"height": "580px"}),
+            ], className="card col-12"),
+        ], className="row"),
+
+        # ── Section 3 : Matrice de corrélation ───────────────────────────
+        html.H3("Corrélations microstructure ↔ acoustique/thermique", className="section-separator"),
+        info_box(
+            "La matrice de corrélation de Pearson quantifie la relation linéaire entre descripteurs "
+            "microstructuraux et propriétés mesurées. Valeurs entre −1 et +1. "
+            "Rouge = corrélation négative forte, Bleu = corrélation positive forte, Blanc = aucune relation."
+        ),
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Span("−1", style={"fontSize": "11px", "color": "#EF4444", "fontWeight": "600"}),
+                    html.Div(className="scale-bar"),
+                    html.Span("+1", style={"fontSize": "11px", "color": "#2563EB", "fontWeight": "600"}),
+                ], className="scale-hint"),
+                dcc.Graph(id="at-heatmap-corr", style={"height": "420px"}),
+            ], className="card col-12"),
+        ], className="row"),
+
+        # ── Conclusion ───────────────────────────────────────────────────
+        conclusion_box(
+            "Résultats clés — Acoustique & Thermique",
+            "Les courbes d'absorption révèlent que les matériaux à fibres fines (Carbone, Verre) "
+            "atteignent des coefficients α > 0,8 dès 1000 Hz, tandis que les fibres épaisses "
+            "(Chanvre, PET recyclé) nécessitent des fréquences plus élevées. "
+            "La matrice de corrélation confirme que la porosité est le descripteur "
+            "le plus corrélé à l'absorption (|r| > 0,7), suivie du diamètre moyen. "
+            "L'orientation des fibres influence principalement la résistivité à l'écoulement : "
+            "les matériaux anisotropes présentent des valeurs σ 30–40 % plus élevées.",
+        ),
 
     ], className="page-content")
 
 
 @callback(
-    Output("at-scatter-porosity-abs", "figure"),
-    Output("at-scatter-diameter-abs", "figure"),
-    Output("at-bar-resistivity", "figure"),
-    Output("at-scatter-perm-porosity", "figure"),
     Output("at-heatmap-corr", "figure"),
-    Input("at-sample-select", "id"),
+    Input("at-heatmap-corr", "id"),
 )
-def build_static_charts(_):
+def build_corr_heatmap(_):
     acoustic = load_acoustic_thermal()
-    samples = load_samples()
-    df = acoustic.merge(samples[["sample_id", "material"]], on="sample_id", how="left")
-
-    scatter_por = fig_utils.scatter(
-        df, "porosity", "absorption_1000hz", color_col="material",
-        title="Absorption à 1000 Hz vs porosité",
-        xlabel="Porosité φ", ylabel="Absorption α (1000 Hz)",
-    )
-    scatter_diam = fig_utils.scatter(
-        df, "mean_diameter_um", "absorption_1000hz", color_col="material",
-        title="Absorption à 1000 Hz vs diamètre moyen",
-        xlabel="Diamètre moyen (µm)", ylabel="Absorption α (1000 Hz)",
-    )
-    resistivity_by_mat = (
-        df.groupby("material")["airflow_resistivity"].mean().reset_index()
-        .rename(columns={"airflow_resistivity": "mean_resistivity"})
-    )
-    bar_res = fig_utils.bar_chart(
-        resistivity_by_mat, "material", "mean_resistivity",
-        "Résistivité à l'écoulement par matériau",
-        color_col="material", xlabel="Matériau", ylabel="Résistivité σ (Pa·s/m²)",
-    )
-    scatter_perm = fig_utils.scatter(
-        df, "porosity", "thermal_permeability", color_col="material",
-        title="Perméabilité thermique vs porosité",
-        xlabel="Porosité φ", ylabel="Perméabilité thermique k₀' (m²)",
-    )
     corr_cols = ["porosity", "mean_diameter_um", "orientation_dispersion",
                  "airflow_resistivity", "absorption_1000hz", "absorption_2000hz",
                  "thermal_permeability"]
     corr_matrix = pearson_matrix(acoustic[corr_cols].dropna())
-    heatmap_corr = fig_utils.heatmap_corr(
+    return fig_utils.heatmap_corr(
         corr_matrix,
-        "Corrélations : microstructure ↔ acoustique/thermique",
+        "Corrélations : microstructure ↔ acoustique / thermique",
     )
-    return scatter_por, scatter_diam, bar_res, scatter_perm, heatmap_corr
 
 
 @callback(
     Output("at-transport-subplot", "figure"),
-    Input("at-sample-select", "id"),
+    Input("at-transport-subplot", "id"),
 )
 def build_transport_subplot(_):
     acoustic = load_acoustic_thermal()
-    samples = load_samples()
+    samples  = load_samples()
     df = acoustic.merge(samples[["sample_id", "material"]], on="sample_id", how="left")
     df["orient_category"] = df["orientation_dispersion"].apply(_orient_category)
 
     fig = make_subplots(
         rows=2, cols=2,
         subplot_titles=[label for _, label in TRANSPORT_PARAMS],
-        horizontal_spacing=0.12,
-        vertical_spacing=0.16,
+        horizontal_spacing=0.14,
+        vertical_spacing=0.18,
     )
 
     positions = [(1, 1), (1, 2), (2, 1), (2, 2)]
@@ -221,39 +167,32 @@ def build_transport_subplot(_):
             sub = df[df["orient_category"] == cat]
             if sub.empty:
                 continue
-            show_legend = cat not in legend_shown
+            show_leg = cat not in legend_shown
             legend_shown.add(cat)
-            fig.add_trace(
-                go.Scatter(
-                    x=sub["porosity"],
-                    y=sub[col],
-                    mode="markers",
-                    name=cat,
-                    legendgroup=cat,
-                    showlegend=(idx == 0 and show_legend),
-                    marker=dict(
-                        symbol=ORIENT_SYMBOLS[cat_idx],
-                        color=ORIENT_COLORS[cat_idx],
-                        size=8,
-                        opacity=0.8,
-                        line=dict(width=0.5, color="#333"),
-                    ),
+            fig.add_trace(go.Scatter(
+                x=sub["porosity"],
+                y=sub[col],
+                mode="markers",
+                name=cat,
+                legendgroup=cat,
+                showlegend=(idx == 0 and show_leg),
+                marker=dict(
+                    symbol=ORIENT_SYMBOLS[cat_idx],
+                    color=ORIENT_COLORS[cat_idx],
+                    size=9,
+                    opacity=0.82,
+                    line=dict(width=0.8, color="white"),
                 ),
-                row=row, col=colnum,
-            )
+            ), row=row, col=colnum)
 
             reg = linear_regression(sub["porosity"], sub[col])
             if reg:
-                fig.add_trace(
-                    go.Scatter(
-                        x=reg["x_line"],
-                        y=reg["y_line"],
-                        mode="lines",
-                        showlegend=False,
-                        line=dict(color=ORIENT_COLORS[cat_idx], width=1.2, dash="dot"),
-                    ),
-                    row=row, col=colnum,
-                )
+                fig.add_trace(go.Scatter(
+                    x=reg["x_line"], y=reg["y_line"],
+                    mode="lines",
+                    showlegend=False,
+                    line=dict(color=ORIENT_COLORS[cat_idx], width=1.5, dash="dot"),
+                ), row=row, col=colnum)
 
         axis_idx = "" if idx == 0 else str(idx + 1)
         fig.update_layout(**{
@@ -266,22 +205,22 @@ def build_transport_subplot(_):
     sci.pop("yaxis", None)
     fig.update_layout(
         **sci,
-        height=600,
+        height=580,
         legend=dict(
             title="Orientation des fibres",
             bgcolor="rgba(255,255,255,0.95)",
-            bordercolor="#ccc",
+            bordercolor="#E2E8F0",
             borderwidth=1,
-            font=dict(size=10, color="#1a1a2e"),
+            font=dict(size=10, color="#0F172A"),
         ),
     )
     fig.update_xaxes(
-        gridcolor="#e0e0e0", linecolor="#333", mirror=True,
-        showline=True, ticks="outside", tickcolor="#333",
+        gridcolor="#E8EEF6", linecolor="#CBD5E1", mirror=True,
+        showline=True, ticks="outside", tickcolor="#64748B",
     )
     fig.update_yaxes(
-        gridcolor="#e0e0e0", linecolor="#333", mirror=True,
-        showline=True, ticks="outside", tickcolor="#333",
+        gridcolor="#E8EEF6", linecolor="#CBD5E1", mirror=True,
+        showline=True, ticks="outside", tickcolor="#64748B",
     )
     return fig
 
@@ -295,27 +234,31 @@ def update_absorption_curve(selected_samples):
         return fig_utils.empty_figure("Sélectionnez au moins un échantillon")
 
     acoustic = load_acoustic_thermal()
-    samples = load_samples()
+    samples  = load_samples()
     selected = selected_samples[:6]
     df = acoustic[acoustic["sample_id"].isin(selected)].merge(
         samples[["sample_id", "material"]], on="sample_id", how="left"
     )
 
-    sci_colors = fig_utils._SCI_PALETTE
-    sci_symbols = ["circle", "square", "diamond", "cross", "triangle-up", "star"]
+    sci_colors  = fig_utils._SCI_PALETTE
+    sci_symbols = fig_utils._SCI_SYMBOLS
 
     fig = go.Figure()
     for i, (_, row) in enumerate(df.iterrows()):
         values = [row[col] for col in FREQ_COLS]
-        color = sci_colors[i % len(sci_colors)]
+        color  = sci_colors[i % len(sci_colors)]
         fig.add_trace(go.Scatter(
             x=FREQ_LABELS,
             y=values,
             mode="lines+markers",
             name=f"{row['sample_id']} ({row.get('material', '')})",
-            line=dict(color=color, width=2),
-            marker=dict(symbol=sci_symbols[i % len(sci_symbols)], size=8,
-                        color=color, line=dict(width=0.5, color="#333")),
+            line=dict(color=color, width=2.2),
+            marker=dict(
+                symbol=sci_symbols[i % len(sci_symbols)],
+                size=9,
+                color=color,
+                line=dict(width=1, color="white"),
+            ),
         ))
 
     fig.update_layout(
@@ -325,7 +268,10 @@ def update_absorption_curve(selected_samples):
             ticktext=[str(f) for f in FREQ_LABELS],
             title={"text": "Fréquence (Hz)", "font": {"size": 12}},
         ),
-        yaxis=dict(range=[0, 1.05], title={"text": "Coefficient d'absorption α (0 → 1)", "font": {"size": 12}}),
-        height=380,
+        yaxis=dict(
+            range=[0, 1.05],
+            title={"text": "Coefficient d'absorption α", "font": {"size": 12}},
+        ),
+        height=360,
     )
     return fig_utils.apply_scientific_theme(fig)

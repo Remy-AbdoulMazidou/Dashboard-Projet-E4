@@ -3,9 +3,7 @@ from config import COLORS, MATERIALS, BATCHES, STATUSES
 
 
 def _label(text: str) -> html.Label:
-    return html.Label(text, style={"color": COLORS["text_secondary"], "fontSize": "11px",
-                                    "fontWeight": "600", "marginBottom": "4px",
-                                    "textTransform": "uppercase", "letterSpacing": "0.05em"})
+    return html.Label(text)
 
 
 def _dropdown(dropdown_id: str, options: list, placeholder: str, multi: bool = True) -> dcc.Dropdown:
@@ -56,7 +54,4 @@ def sample_selector(dropdown_id: str, sample_ids: list, multi: bool = False) -> 
 
 
 def filter_bar(*filter_components) -> html.Div:
-    return html.Div(
-        list(filter_components),
-        className="filter-bar",
-    )
+    return html.Div(list(filter_components), className="filter-bar")

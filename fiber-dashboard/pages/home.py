@@ -1,57 +1,50 @@
 from dash import html
 
 MATERIALS = [
-    ("Nylon",       "#2E86AB", "Ø 15 µm"),
-    ("Carbone",     "#2A9D8F", "Ø 7 µm"),
-    ("Verre",       "#5B9BD5", "Ø 10 µm"),
-    ("Cuivre",      "#E76F51", "Ø 20 µm"),
-    ("PET recyclé", "#E9C46A", "Ø 25 µm"),
-    ("Chanvre",     "#57CC99", "Ø 30 µm"),
+    ("Nylon",       "#2563EB", "Ø 15 µm"),
+    ("Carbone",     "#EF4444", "Ø 7 µm"),
+    ("Verre",       "#10B981", "Ø 10 µm"),
+    ("Cuivre",      "#F59E0B", "Ø 20 µm"),
+    ("PET recyclé", "#8B5CF6", "Ø 25 µm"),
+    ("Chanvre",     "#059669", "Ø 30 µm"),
 ]
 
 PIPELINE = [
-    ("01", "Acquisition µ-CT",  "1–20 µm/voxel · volume 3D"),
-    ("02", "Segmentation 3D",   "Depriester et al. (2022)"),
-    ("03", "Morphologie",       "Diamètre · longueur · orient."),
-    ("04", "Propriétés JCA",    "Résistivité · absorption"),
-    ("05", "Corrélations",      "Régression · validation"),
+    ("01", "Acquisition µ-CT",  "Résolution 1–20 µm/voxel, volume 3D"),
+    ("02", "Segmentation 3D",   "Algorithme Depriester et al. (2022)"),
+    ("03", "Morphologie",       "Diamètre, longueur, orientation"),
+    ("04", "Propriétés JCA",    "Résistivité, absorption, thermique"),
+    ("05", "Corrélations",      "Régression linéaire, validation"),
 ]
 
 NAV_CARDS = [
     {
-        "href": "/overview",
-        "icon": "📊",
-        "color": "#2E86AB",
-        "title": "Vue d'ensemble",
-        "desc": "Statistiques globales, répartition matériaux, suivi des traitements.",
-    },
-    {
-        "href": "/microstructure",
-        "icon": "🔬",
-        "color": "#2A9D8F",
+        "href":  "/microstructure",
+        "icon":  "🔬",
+        "color": "#2563EB",
         "title": "Microstructure",
-        "desc": "Diamètre, longueur, courbure, orientation 3D et figures de pôle.",
+        "desc":  "Distributions de diamètre et longueur, orientation 3D par figure de pôle stéréographique, et courbes KDE par matériau.",
     },
     {
-        "href": "/properties",
-        "icon": "🔊",
-        "color": "#E76F51",
-        "title": "Propriétés",
-        "desc": "Absorption acoustique, perméabilité thermique, modèle JCA.",
+        "href":  "/acoustique",
+        "icon":  "🔊",
+        "color": "#10B981",
+        "title": "Acoustique & Thermique",
+        "desc":  "Courbes d'absorption en fréquence, paramètres du modèle JCA vs porosité, et matrice de corrélation microstructure–propriétés.",
     },
     {
-        "href": "/algorithm",
-        "icon": "⚙️",
-        "color": "#6A4C93",
+        "href":  "/correlations",
+        "icon":  "📈",
+        "color": "#8B5CF6",
+        "title": "Corrélations",
+        "desc":  "Scatter plot interactif sur 15 variables, droite de régression avec R², et validation prédits vs mesurés pour 4 propriétés.",
+    },
+    {
+        "href":  "/algorithme",
+        "icon":  "⚙️",
+        "color": "#F59E0B",
         "title": "Algorithme",
-        "desc": "Paramètres de segmentation, robustesse au bruit et résolution.",
-    },
-    {
-        "href": "/quality",
-        "icon": "🔍",
-        "color": "#E9C46A",
-        "title": "Contrôle qualité",
-        "desc": "Anomalies de scan, taux de résolution, détection automatique.",
+        "desc":  "Sensibilité des paramètres de segmentation (seuil × directions) et robustesse au bruit et au sous-échantillonnage.",
     },
 ]
 
@@ -73,7 +66,7 @@ def _nav_card(card):
             html.Span(card["icon"], className="home-card-icon"),
             html.H3(card["title"], className="home-card-title"),
             html.P(card["desc"], className="home-card-desc"),
-            html.Span("Accéder →", className="home-card-arrow"),
+            html.Span("Explorer →", className="home-card-arrow"),
         ],
     )
 
@@ -81,53 +74,65 @@ def _nav_card(card):
 def layout() -> html.Div:
     return html.Div([
 
+        # ── Top bar ───────────────────────────────────────────────────────
+        html.Div([
+            html.Div([
+                html.Span("◈", className="home-topbar-icon"),
+                html.Span("FiberScope", className="home-topbar-name"),
+                html.Span("v2.0", className="home-topbar-version"),
+            ], className="home-topbar-brand"),
+            html.Div([
+                html.Span("ESIEE Paris · E4 DSIA", className="home-topbar-tag"),
+                html.Span("MSME · UMR 8208 CNRS", className="home-topbar-tag"),
+                html.Span("Univ. Gustave Eiffel", className="home-topbar-tag"),
+            ], className="home-topbar-tags"),
+        ], className="home-topbar"),
+
         # ── Hero ─────────────────────────────────────────────────────────
         html.Div([
             html.Div([
-                # Logo
                 html.Div([
-                    html.Span("◈", className="hero-logo-icon"),
-                    html.Span("FiberScope", className="hero-logo-text"),
-                    html.Span("v2.0", className="hero-logo-version"),
-                ], className="hero-logo"),
+                    html.Span("🔬", style={"marginRight": "6px"}),
+                    "Analyse microstructure–propriétés · Tomographie µ-CT",
+                ], className="hero-eyebrow"),
 
-                # Titre principal
                 html.H1([
-                    "Analyse microstructure–propriétés",
+                    "Dashboard analytique",
                     html.Br(),
-                    html.Span(
-                        "des matériaux fibreux recyclés",
-                        className="hero-title-accent",
-                    ),
+                    html.Span("des matériaux fibreux", className="hero-title-accent"),
                 ], className="hero-title"),
 
-                # Description scientifique
                 html.P(
-                    "Tomographie µ-CT · Segmentation 3D · Modèle JCA. "
-                    "Ce projet relie quantitativement la microstructure des fibres — "
-                    "diamètre, orientation, porosité — aux propriétés acoustiques "
-                    "et thermiques du matériau final.",
+                    "Ce dashboard relie quantitativement la microstructure des fibres — "
+                    "diamètre, longueur, orientation, porosité — aux propriétés acoustiques "
+                    "et thermiques du matériau. Les données proviennent d'une segmentation 3D "
+                    "par tomographie µ-CT sur 6 matériaux et 26 échantillons.",
                     className="hero-subtitle",
                 ),
 
-                # Tags institutionnels
                 html.Div([
-                    html.Span("ESIEE Paris · E4 DSIA", className="hero-tag"),
-                    html.Span("MSME · UMR 8208 CNRS", className="hero-tag"),
-                    html.Span("Univ. Gustave Eiffel", className="hero-tag"),
-                ], className="hero-tags"),
+                    html.Div([
+                        html.Div("26", className="hero-stat-num", style={"color": "#2563EB"}),
+                        html.Div("échantillons analysés", className="hero-stat-label"),
+                    ], className="hero-stat"),
+                    html.Div([
+                        html.Div("4 952", className="hero-stat-num", style={"color": "#10B981"}),
+                        html.Div("fibres segmentées", className="hero-stat-label"),
+                    ], className="hero-stat"),
+                    html.Div([
+                        html.Div("2 983", className="hero-stat-num", style={"color": "#8B5CF6"}),
+                        html.Div("contacts fibre-fibre", className="hero-stat-label"),
+                    ], className="hero-stat"),
+                ], className="hero-stats"),
 
             ], className="hero-left"),
 
-            # Panneau de données (côté droit)
+            # Panneau matériaux
             html.Div([
-                html.Div("Jeu de données", className="data-panel-header"),
+                html.Div("Matériaux du jeu de données", className="data-panel-header"),
                 html.Div([
                     html.Div([
-                        html.Span(
-                            className="mat-dot",
-                            style={"background": color},
-                        ),
+                        html.Span(className="mat-dot", style={"background": color}),
                         html.Span(name, className="mat-name"),
                         html.Span(diam, className="mat-diam"),
                     ], className="mat-row")
@@ -135,24 +140,21 @@ def layout() -> html.Div:
                 ], className="mat-list"),
                 html.Div([
                     html.Div([
-                        html.Span("26", className="data-stat-num",
-                                  style={"color": "#2E86AB"}),
-                        html.Span("échantillons", className="data-stat-label"),
+                        html.Span("6", className="data-stat-num", style={"color": "#2563EB"}),
+                        html.Span("matériaux distincts", className="data-stat-label"),
                     ], className="data-stat-row"),
                     html.Div([
-                        html.Span("4 952", className="data-stat-num",
-                                  style={"color": "#2A9D8F"}),
-                        html.Span("fibres segmentées", className="data-stat-label"),
+                        html.Span("3", className="data-stat-num", style={"color": "#F59E0B"}),
+                        html.Span("lots de fabrication", className="data-stat-label"),
                     ], className="data-stat-row"),
                     html.Div([
-                        html.Span("2 983", className="data-stat-num",
-                                  style={"color": "#E76F51"}),
-                        html.Span("contacts fibre-fibre", className="data-stat-label"),
+                        html.Span("7", className="data-stat-num", style={"color": "#10B981"}),
+                        html.Span("fichiers CSV de données", className="data-stat-label"),
                     ], className="data-stat-row"),
                 ], className="data-panel-footer"),
             ], className="hero-data-panel"),
 
-        ], className="hero-inner"),
+        ], className="hero-section"),
 
         # ── Pipeline ─────────────────────────────────────────────────────
         html.Div([
@@ -175,7 +177,7 @@ def layout() -> html.Div:
         # ── Footer ───────────────────────────────────────────────────────
         html.Footer([
             html.Span(
-                "FiberScope v2.0 · MSME UMR 8208 CNRS · Université Gustave Eiffel · ESIEE Paris",
+                "FiberScope v2.0 · MSME UMR 8208 CNRS · Université Gustave Eiffel · ESIEE Paris E4 DSIA",
                 className="footer-text",
             ),
         ], className="home-footer"),
