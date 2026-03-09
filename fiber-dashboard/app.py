@@ -29,7 +29,7 @@ explicatif plutôt que de faire planter l'application.
 
 import os
 import dash
-from dash import dcc, html, Input, Output
+from dash import dcc, html, Input, Output, State, ctx
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import pandas as pd
@@ -63,6 +63,10 @@ if _has(samples, "sample_id", "material", "batch"):
 
 MATERIALS = sorted(samples["material"].unique().tolist()) if _has(samples, "material") else []
 BATCHES   = sorted(samples["batch"].unique().tolist()) if _has(samples, "batch") else []
+
+FREQ_VALS = [250, 500, 1000, 2000, 4000]
+FREQ_COLS = ["absorption_250hz", "absorption_500hz", "absorption_1000hz",
+             "absorption_2000hz", "absorption_4000hz"]
 
 # ─── Palette ──────────────────────────────────────────────────────────────────
 MAT_COLORS = {
@@ -121,7 +125,7 @@ PLOT_LAYOUT = dict(
     paper_bgcolor="white",
     plot_bgcolor="#F8FAFC",
     font=dict(family="Inter, system-ui, sans-serif", size=12, color="#334155"),
-    margin=dict(l=70, r=24, t=32, b=60),
+    margin=dict(l=70, r=24, t=48, b=60),
     hoverlabel=dict(bgcolor="#1E293B", bordercolor="#0F172A", font_size=12, font_color="white"),
 )
 
@@ -131,6 +135,21 @@ AXIS_STYLE = dict(
     showline=True,  linecolor="#64748B",  linewidth=1,
     title_font=dict(size=13, color="#1E293B", family="Inter, system-ui, sans-serif"),
     tickfont=dict(size=11, color="#334155"),
+)
+
+# Légende uniforme sur tous les graphiques
+LEGEND_STYLE = dict(
+    title=dict(
+        text="Matériaux  —  cliquez pour afficher / double-clic pour isoler",
+        font=dict(size=10, color="#64748B"),
+    ),
+    bgcolor="rgba(248,250,252,0.95)",
+    bordercolor="#CBD5E1",
+    borderwidth=1,
+    font=dict(size=11, color="#334155"),
+    itemclick="toggle",
+    itemdoubleclick="toggleothers",
+    tracegroupgap=3,
 )
 
 def apply_grid(fig):
@@ -183,14 +202,6 @@ def tab_banner(key, subtitle, description, bullets):
     ])
 
 
-def section_label(text, color="#1E293B", size="14px", weight=700, center=True, mb="18px"):
-    return html.P(text, style={
-        "fontWeight": weight, "fontSize": size, "color": color,
-        "textAlign": "center" if center else "left",
-        "marginBottom": mb, "letterSpacing": "-0.2px",
-    })
-
-
 def graph_card(graph_id, title, description, read_guide, height="310px", col_width=6, accent="#2563EB"):
     return dbc.Col(dbc.Card(style={
         "borderRadius": "12px",
@@ -199,7 +210,6 @@ def graph_card(graph_id, title, description, read_guide, height="310px", col_wid
         "height":       "100%",
     }, children=[
         dbc.CardBody(style={"padding": "20px 20px 16px 20px"}, children=[
-            # Titre centré avec accent coloré
             html.Div(style={"textAlign": "center", "marginBottom": "10px"}, children=[
                 html.Div(style={
                     "width": "28px", "height": "3px",
@@ -211,13 +221,11 @@ def graph_card(graph_id, title, description, read_guide, height="310px", col_wid
                     "fontSize": "13.5px", "marginBottom": "0",
                 }),
             ]),
-            # Description du graphique
             html.P(description, style={
                 "fontSize": "12px", "color": "#64748B",
                 "lineHeight": "1.6", "marginBottom": "8px",
                 "textAlign": "center",
             }),
-            # Guide de lecture
             html.Div([
                 html.Span("Comment lire ce graphique : ", style={
                     "fontWeight": 700, "fontSize": "11px", "color": "#334155",
@@ -233,7 +241,6 @@ def graph_card(graph_id, title, description, read_guide, height="310px", col_wid
                 "marginBottom":    "14px",
                 "lineHeight":      "1.55",
             }),
-            # Graphique
             dcc.Graph(id=graph_id, config=PLOT_CONFIG, style={"height": height}),
         ])
     ]), xs=12, md=col_width, className="mb-4")
@@ -264,12 +271,92 @@ def kpi_card(label, value, expl, color):
     ]), md=True, className="mb-3")
 
 
+def _sample_selector_panel():
+    """Panneau de sélection des échantillons pour le graphique d'absorption."""
+    accent = TABS["acoustics"]["bg"]
+    return dbc.Col(dbc.Card(style={
+        "borderRadius": "12px",
+        "border":       "1px solid #E2E8F0",
+        "boxShadow":    "0 2px 10px rgba(15,23,42,0.06)",
+        "height":       "100%",
+    }, children=[
+        dbc.CardBody(style={"padding": "16px 14px"}, children=[
+            # En-tête
+            html.Div(style={"textAlign": "center", "marginBottom": "12px"}, children=[
+                html.Div(style={
+                    "width": "28px", "height": "3px",
+                    "backgroundColor": accent, "borderRadius": "2px",
+                    "margin": "0 auto 8px auto",
+                }),
+                html.H6("Sélection", style={
+                    "fontWeight": 700, "color": "#0F172A",
+                    "fontSize": "13px", "marginBottom": "3px",
+                }),
+                html.P("Cochez les échantillons à afficher sur le graphique",
+                       style={"fontSize": "10.5px", "color": "#64748B", "margin": 0,
+                              "lineHeight": "1.4"}),
+            ]),
+            # Barre de recherche
+            dcc.Input(
+                id="acou-search",
+                type="text",
+                placeholder="🔍 Rechercher...",
+                debounce=True,
+                style={
+                    "width": "100%", "padding": "6px 10px",
+                    "border": "1px solid #E2E8F0", "borderRadius": "8px",
+                    "fontSize": "12px", "marginBottom": "8px",
+                    "color": "#334155", "boxSizing": "border-box",
+                    "outline": "none",
+                },
+            ),
+            # Boutons tout/aucun
+            html.Div(style={"display": "flex", "gap": "6px", "marginBottom": "10px"}, children=[
+                dbc.Button("Tout afficher", id="acou-select-all", size="sm", style={
+                    "flex": 1, "fontSize": "11px", "padding": "5px 4px",
+                    "backgroundColor": accent, "color": "white",
+                    "border": "none", "borderRadius": "6px", "fontWeight": 600,
+                }),
+                dbc.Button("Tout masquer", id="acou-deselect-all", size="sm", style={
+                    "flex": 1, "fontSize": "11px", "padding": "5px 4px",
+                    "backgroundColor": "white", "color": "#64748B",
+                    "border": "1px solid #CBD5E1", "borderRadius": "6px",
+                }),
+            ]),
+            # Liste avec cases à cocher
+            html.Div(style={
+                "maxHeight": "270px", "overflowY": "auto",
+                "border": "1px solid #F1F5F9", "borderRadius": "8px",
+                "padding": "6px 8px",
+            }, children=[
+                dcc.Checklist(
+                    id="acou-checklist",
+                    options=[],
+                    value=[],
+                    labelStyle={
+                        "display": "flex", "alignItems": "center",
+                        "marginBottom": "6px", "cursor": "pointer",
+                        "lineHeight": "1.3",
+                    },
+                    inputStyle={
+                        "marginRight": "8px", "cursor": "pointer",
+                        "accentColor": accent, "width": "14px", "height": "14px",
+                    },
+                ),
+            ]),
+        ]),
+    ]), xs=12, md=4, className="mb-4")
+
+
 # ─── Layout ───────────────────────────────────────────────────────────────────
 app.layout = dbc.Container(fluid=True, style={
     "backgroundColor": "#F1F5F9",
     "minHeight": "100vh",
     "fontFamily": "Inter, system-ui, sans-serif",
 }, children=[
+
+    # ── Store données acoustiques ────────────────────────────────────────────
+    dcc.Store(id="acou-data-store"),
 
     # ── HEADER ──────────────────────────────────────────────────────────────
     html.Div(style={
@@ -291,7 +378,6 @@ app.layout = dbc.Container(fluid=True, style={
             "Caractérisation morphologique des réseaux fibreux par microtomographie X",
             style={"color": "#BAE6FD", "fontSize": "15px", "marginBottom": "20px"}
         ),
-        # Légende matériaux — texte blanc lisible
         html.Div([
             html.Span([
                 html.Span(style={
@@ -304,10 +390,8 @@ app.layout = dbc.Container(fluid=True, style={
                     "border": "2px solid rgba(255,255,255,0.4)",
                 }),
                 html.Span(m, style={
-                    "fontSize": "12px",
-                    "color": "white",          # texte blanc, visible sur fond sombre
-                    "fontWeight": 600,
-                    "verticalAlign": "middle",
+                    "fontSize": "12px", "color": "white",
+                    "fontWeight": 600, "verticalAlign": "middle",
                 }),
             ], style={"marginRight": "16px", "whiteSpace": "nowrap"})
             for i, m in enumerate(MATERIALS)
@@ -329,11 +413,15 @@ app.layout = dbc.Container(fluid=True, style={
             dbc.CardBody(style={"padding": "16px 20px"}, children=[
                 html.P(
                     "Filtrez les données par matériau et par lot de fabrication. "
-                    "Tous les graphiques et indicateurs se mettent à jour instantanément.",
+                    "Tous les graphiques se mettent à jour instantanément.",
                     style={"fontSize": "12px", "color": "#64748B", "marginBottom": "14px"},
                 ),
-                dbc.Row(align="end", children=[
-                    dbc.Col([
+                # ── 3 éléments sur la même ligne ──
+                html.Div(style={
+                    "display": "flex", "gap": "16px",
+                    "alignItems": "flex-end", "flexWrap": "wrap",
+                }, children=[
+                    html.Div(style={"flex": "2 1 180px"}, children=[
                         html.Label("Matériau", style={
                             "fontWeight": 700, "fontSize": "12px",
                             "color": "#334155", "marginBottom": "5px", "display": "block",
@@ -345,39 +433,36 @@ app.layout = dbc.Container(fluid=True, style={
                             placeholder="Tous les matériaux",
                             style={"fontSize": "13px"},
                         ),
-                    ], md=5),
-                    dbc.Col([
-                        html.Div(style={"display": "flex", "gap": "10px", "alignItems": "flex-end"}, children=[
-                            html.Div(style={"flex": 1}, children=[
-                                html.Label("Lot de fabrication", style={
-                                    "fontWeight": 700, "fontSize": "12px",
-                                    "color": "#334155", "marginBottom": "5px", "display": "block",
-                                }),
-                                dcc.Dropdown(
-                                    id="filter-batch",
-                                    options=[{"label": b, "value": b} for b in BATCHES],
-                                    multi=True,
-                                    placeholder="Tous les lots",
-                                    style={"fontSize": "13px"},
-                                ),
-                            ]),
-                            dbc.Button(
-                                "Tout afficher",
-                                id="btn-reset",
-                                style={
-                                    "border":           "1px solid #CBD5E1",
-                                    "backgroundColor":  "white",
-                                    "color":            "#475569",
-                                    "fontWeight":       700,
-                                    "fontSize":         "12px",
-                                    "whiteSpace":       "nowrap",
-                                    "borderRadius":     "8px",
-                                    "padding":          "9px 16px",
-                                    "flexShrink":       0,
-                                },
-                            ),
-                        ]),
-                    ], md=7),
+                    ]),
+                    html.Div(style={"flex": "2 1 180px"}, children=[
+                        html.Label("Lot de fabrication", style={
+                            "fontWeight": 700, "fontSize": "12px",
+                            "color": "#334155", "marginBottom": "5px", "display": "block",
+                        }),
+                        dcc.Dropdown(
+                            id="filter-batch",
+                            options=[{"label": b, "value": b} for b in BATCHES],
+                            multi=True,
+                            placeholder="Tous les lots",
+                            style={"fontSize": "13px"},
+                        ),
+                    ]),
+                    dbc.Button(
+                        "Tout afficher",
+                        id="btn-reset",
+                        style={
+                            "border":          "1px solid #CBD5E1",
+                            "backgroundColor": "white",
+                            "color":           "#475569",
+                            "fontWeight":      700,
+                            "fontSize":        "12px",
+                            "whiteSpace":      "nowrap",
+                            "borderRadius":    "8px",
+                            "padding":         "9px 18px",
+                            "flexShrink":      0,
+                            "alignSelf":       "flex-end",
+                        },
+                    ),
                 ]),
             ]),
         ]))
@@ -390,6 +475,8 @@ app.layout = dbc.Container(fluid=True, style={
             value="overview",
             style={"borderBottom": "2px solid #E2E8F0", "marginBottom": "0"},
             children=[
+
+                # ── VUE D'ENSEMBLE ──────────────────────────────────────────
                 dcc.Tab(
                     label=TABS["overview"]["label"],
                     value="overview",
@@ -402,21 +489,21 @@ app.layout = dbc.Container(fluid=True, style={
                                 "Tableau de bord général de l'analyse microtomographique",
                                 "Cette vue synthétise l'ensemble des données disponibles pour la sélection en cours. "
                                 "Elle présente les indicateurs clés issus de l'analyse des volumes 3D : "
-                                "nombre de fibres détectées, porosité, qualité de reconstruction, "
-                                "et densité du réseau de contacts. "
+                                "nombre de fibres détectées, porosité et densité du réseau de contacts. "
                                 "C'est le point de départ pour comprendre un échantillon avant d'explorer les détails.",
                                 [
                                     "Échantillons : volumes 3D numérisés par microtomographie X (scanner de haute résolution).",
                                     "Fibres : éléments fibreux individuels segmentés algorithmiquement dans chaque volume.",
                                     "Contacts : points où deux fibres se croisent et se touchent dans le réseau 3D.",
                                     "Porosité : proportion de vide dans le matériau — un indicateur clé des performances acoustiques.",
-                                    "Score qualité : évaluation de la netteté de la reconstruction 3D (segmentation).",
                                 ],
                             ),
                             dbc.Row(id="row-kpis", className="px-1"),
                         ])
                     ],
                 ),
+
+                # ── MORPHOLOGIE ─────────────────────────────────────────────
                 dcc.Tab(
                     label=TABS["morphology"]["label"],
                     value="morphology",
@@ -446,9 +533,9 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Le diamètre mesure l'épaisseur de chaque fibre sur sa section transversale. "
                                     "Des fibres fines créent un réseau plus dense avec davantage de connexions par unité de volume, "
                                     "ce qui améliore généralement l'absorption acoustique.",
-                                    "Chaque boîte couvre 50 % des fibres (du 1er au 3e quartile). "
-                                    "La ligne centrale = médiane. Les points isolés = fibres atypiques. "
-                                    "Survolez pour voir les statistiques exactes.",
+                                    "Chaque boîte couvre 50 % des fibres (1er → 3e quartile). "
+                                    "Le trait central = valeur médiane. Les points isolés = fibres atypiques. "
+                                    "Survolez pour voir les statistiques complètes.",
                                     accent=TABS["morphology"]["bg"],
                                 ),
                                 graph_card(
@@ -457,8 +544,9 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Des fibres longues forment plus de liaisons avec leurs voisines, "
                                     "créant un réseau enchevêtré plus rigide. La variabilité de longueur "
                                     "au sein d'un même matériau reflète l'homogénéité de fabrication.",
-                                    "Une grande hauteur de boîte = forte variabilité de longueur dans le matériau. "
-                                    "Comparez la médiane (trait central) entre matériaux pour voir les différences typiques.",
+                                    "Une boîte haute = forte variabilité de longueur dans ce matériau. "
+                                    "Comparez la médiane entre matériaux pour voir les différences typiques. "
+                                    "Survolez pour voir les chiffres exacts.",
                                     accent=TABS["morphology"]["bg"],
                                 ),
                             ]),
@@ -467,19 +555,19 @@ app.layout = dbc.Container(fluid=True, style={
                                     "graph-orientation",
                                     "Distribution des orientations angulaires θ",
                                     "L'angle θ mesure l'inclinaison de chaque fibre par rapport au plan horizontal. "
-                                    "θ = 0° → fibre horizontale (couchée). θ = 90° → fibre verticale (debout). "
+                                    "θ = 0° → fibre couchée (horizontale). θ = 90° → fibre debout (verticale). "
                                     "Cette distribution caractérise l'isotropie ou l'anisotropie du matériau.",
                                     "Un pic marqué près de 0° = matériau plan (typique des non-tissés). "
-                                    "Courbe plate = fibres orientées dans toutes les directions (matériau isotrope). "
-                                    "Cliquez sur un matériau dans la légende pour l'isoler.",
+                                    "Courbe plate = fibres dans toutes les directions (matériau isotrope). "
+                                    "Cliquez sur un matériau dans la légende pour l'afficher seul.",
                                     accent=TABS["morphology"]["bg"],
                                 ),
                                 graph_card(
                                     "graph-curvature",
                                     "Courbure des fibres par matériau (κ × 10³ mm⁻¹)",
                                     "κ = 1/R mesure l'écart d'une fibre par rapport à une droite parfaite. "
-                                    "κ ≈ 0 = fibre rectiligne. κ élevé = fibre ondulée ou torsadée. "
-                                    "Les fibres ondulées augmentent la tortuosité des pores, ce qui favorise l'absorption acoustique.",
+                                    "κ ≈ 0 = fibre rectiligne. κ élevé = fibre très ondulée. "
+                                    "Les fibres ondulées augmentent la tortuosité des pores, favorisant l'absorption acoustique.",
                                     "Valeurs proches de 0 = fibres rectilignes (verre, carbone). "
                                     "Valeurs élevées = fibres très ondulées (naturelles, recyclées). "
                                     "Survolez pour voir la distribution exacte par matériau.",
@@ -489,6 +577,8 @@ app.layout = dbc.Container(fluid=True, style={
                         ])
                     ],
                 ),
+
+                # ── LIAISONS INTER-FIBRES ────────────────────────────────────
                 dcc.Tab(
                     label=TABS["contacts"]["label"],
                     value="contacts",
@@ -518,8 +608,8 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Chaque contact est l'intersection de deux fibres. Sa surface dépend "
                                     "du diamètre des fibres, de leur angle de croisement et de la forme de leur section. "
                                     "Une grande aire = jonction solide. Une petite aire = liaison plus souple.",
-                                    "La distribution est typiquement asymétrique : la plupart des contacts sont petits (pic à gauche), "
-                                    "et quelques rares contacts très larges existent (queue à droite). "
+                                    "Distribution typiquement asymétrique : plupart des contacts sont petits (pic à gauche), "
+                                    "avec quelques rares contacts très larges (queue à droite). "
                                     "Survolez les barres pour voir les effectifs précis.",
                                     accent=TABS["contacts"]["bg"],
                                 ),
@@ -531,7 +621,7 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Un bon matériau acoustique trouve un compromis : assez poreux pour laisser entrer "
                                     "l'air, mais assez connecté pour le freiner.",
                                     "Tendance attendue : décroissante (plus la porosité est élevée, moins il y a de contacts). "
-                                    "Les points s'écartant de cette tendance sont informatifs sur la géométrie particulière des fibres. "
+                                    "Les points hors tendance révèlent une géométrie de fibres particulière. "
                                     "Survolez pour voir l'identifiant de l'échantillon.",
                                     accent=TABS["contacts"]["bg"],
                                 ),
@@ -539,6 +629,8 @@ app.layout = dbc.Container(fluid=True, style={
                         ])
                     ],
                 ),
+
+                # ── PROPRIÉTÉS ACOUSTIQUES ───────────────────────────────────
                 dcc.Tab(
                     label=TABS["acoustics"]["label"],
                     value="acoustics",
@@ -561,32 +653,50 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Objectif : σ ni trop faible (son traverse) ni trop élevée (son réfléchi).",
                                 ],
                             ),
-                            dbc.Row(className="px-1 g-3", children=[
+
+                            # Ligne 1 : courbes d'absorption + panneau de sélection
+                            dbc.Row(className="px-1 g-3 mb-0", children=[
                                 graph_card(
                                     "graph-absorption",
                                     "Coefficient d'absorption acoustique par fréquence",
                                     "Chaque courbe représente un échantillon mesuré en tube de Kundt. "
-                                    "Les matériaux fibreux absorbent généralement mieux les hautes fréquences "
-                                    "(voix, bruit moteur) que les basses (vibrations structurelles). "
-                                    "La courbe en pointillés noirs est la médiane de la sélection.",
-                                    "Un α élevé dès 500 Hz est très bon pour les applications transport. "
-                                    "Cliquez sur un échantillon dans la légende pour l'isoler. "
-                                    "Les écarts entre courbes d'un même matériau révèlent la variabilité de fabrication.",
-                                    height="360px",
-                                    col_width=7,
+                                    "Sélectionnez les échantillons à comparer dans le panneau de droite.",
+                                    "α élevé dès 500 Hz = très bon pour les applications transport. "
+                                    "Comparez les courbes pour évaluer la variabilité inter-lots. "
+                                    "Survolez pour lire la valeur exacte à chaque fréquence.",
+                                    height="340px",
+                                    col_width=8,
                                     accent=TABS["acoustics"]["bg"],
                                 ),
+                                _sample_selector_panel(),
+                            ]),
+
+                            # Ligne 2 : résistivité + classement comparatif
+                            dbc.Row(className="px-1 g-3", children=[
                                 graph_card(
                                     "graph-resistivity",
                                     "Résistivité au flux d'air vs Porosité",
                                     "La résistivité σ (Pa·s/m²) est le paramètre acoustique le plus prédictif "
                                     "pour les matériaux fibreux. Elle croît quand la porosité diminue. "
                                     "La droite de tendance montre la relation log-linéaire typique de ces matériaux.",
-                                    "Axe vertical en échelle logarithmique — les valeurs couvrent plusieurs ordres de grandeur. "
-                                    "La plage optimale dépend de l'application visée. "
+                                    "Axe vertical en échelle logarithmique (les valeurs couvrent plusieurs ordres de grandeur). "
+                                    "La plage optimale σ dépend de l'application visée. "
                                     "Survolez pour voir l'identifiant de l'échantillon et les valeurs exactes.",
-                                    height="360px",
-                                    col_width=5,
+                                    height="310px",
+                                    col_width=6,
+                                    accent=TABS["acoustics"]["bg"],
+                                ),
+                                graph_card(
+                                    "graph-absorption-ranking",
+                                    "Classement acoustique — absorption moyenne par matériau",
+                                    "Ce graphique compare directement les matériaux sur l'ensemble du spectre. "
+                                    "Chaque courbe est la moyenne de tous les échantillons d'un même matériau, "
+                                    "permettant d'identifier rapidement le matériau le plus performant acoustiquement.",
+                                    "Les courbes hautes = meilleure absorption. Focalisez-vous sur 500–2000 Hz "
+                                    "(plage critique pour le confort acoustique en transport). "
+                                    "Double-cliquez sur un matériau pour l'isoler.",
+                                    height="310px",
+                                    col_width=6,
                                     accent=TABS["acoustics"]["bg"],
                                 ),
                             ]),
@@ -638,14 +748,23 @@ def _empty_fig(msg="Données non disponibles"):
     return apply_grid(fig)
 
 
-def _boxplot(df, y_col, y_title=""):
+def _boxplot(df, y_col, y_title="", unit=""):
+    """Boxplot par matériau avec tooltip clair en français."""
     if df.empty or not _has(df, y_col, "material"):
         return _empty_fig(f"Colonne '{y_col}' non disponible dans les données")
+    u = f" {unit}" if unit else ""
     fig = go.Figure()
     for i, mat in enumerate(sorted(df["material"].dropna().unique())):
         vals = df[df["material"] == mat][y_col].dropna()
         if vals.empty:
             continue
+        q1_v   = vals.quantile(0.25)
+        med_v  = vals.median()
+        q3_v   = vals.quantile(0.75)
+        iqr_v  = q3_v - q1_v
+        low_v  = max(vals.min(), q1_v - 1.5 * iqr_v)
+        high_v = min(vals.max(), q3_v + 1.5 * iqr_v)
+        n_v    = len(vals)
         fig.add_trace(go.Box(
             y=vals, name=mat,
             marker_color=mat_color(mat, i),
@@ -653,11 +772,10 @@ def _boxplot(df, y_col, y_title=""):
             line_width=1.8, marker_size=3,
             hovertemplate=(
                 f"<b>{mat}</b><br>"
-                "Médiane : %{median:.2f}<br>"
-                "Q1 : %{q1:.2f}<br>"
-                "Q3 : %{q3:.2f}<br>"
-                "Min : %{lowerfence:.2f}<br>"
-                "Max : %{upperfence:.2f}"
+                f"Médiane : <b>{med_v:.2f}{u}</b><br>"
+                f"50 % des fibres entre {q1_v:.2f} et {q3_v:.2f}{u}<br>"
+                f"Plage typique : {low_v:.2f} – {high_v:.2f}{u}<br>"
+                f"Nombre de mesures : {n_v:,}"
                 "<extra></extra>"
             ),
         ))
@@ -669,7 +787,17 @@ def _boxplot(df, y_col, y_title=""):
     return apply_grid(fig)
 
 
-# ─── Callback principal ───────────────────────────────────────────────────────
+def _legend_h():
+    """Légende horizontale au-dessus du graphique."""
+    return dict(**LEGEND_STYLE, orientation="h", y=1.18, x=0)
+
+
+def _legend_v():
+    """Légende verticale à droite du graphique."""
+    return dict(**LEGEND_STYLE, orientation="v", x=1.02, y=1)
+
+
+# ─── Callback principal (tout sauf graph-absorption) ─────────────────────────
 @app.callback(
     Output("row-kpis",               "children"),
     Output("graph-diameter",         "figure"),
@@ -678,8 +806,9 @@ def _boxplot(df, y_col, y_title=""):
     Output("graph-curvature",        "figure"),
     Output("graph-contact-area",     "figure"),
     Output("graph-density-porosity", "figure"),
-    Output("graph-absorption",       "figure"),
     Output("graph-resistivity",      "figure"),
+    Output("graph-absorption-ranking", "figure"),
+    Output("acou-data-store",        "data"),
     Input("filter-material", "value"),
     Input("filter-batch",    "value"),
 )
@@ -699,7 +828,6 @@ def update_all(mat_sel, bat_sel):
     n_fibers   = len(fib_f)
     n_contacts = len(con_f)
     mean_por   = samp_f["porosity"].mean() if _has(samp_f, "porosity") and n_samples else None
-    mean_qual  = samp_f["quality_score"].mean() if _has(samp_f, "quality_score") and n_samples else None
 
     # ── KPIs ────────────────────────────────────────────────────────────────
     kpis = [
@@ -714,16 +842,15 @@ def update_all(mat_sel, bat_sel):
                  "Fraction de vide dans le matériau (0 = plein, 1 = creux)", "#B45309"),
     ]
 
-    # ── Diamètre ─────────────────────────────────────────────────────────────
-    fig_diam = _boxplot(fib_f, "diameter_um", "Diamètre (µm)")
+    # ── Diamètre / Longueur ───────────────────────────────────────────────
+    fig_diam = _boxplot(fib_f, "diameter_um", "Diamètre (µm)", "µm")
+    fig_len  = _boxplot(fib_f, "length_um",   "Longueur (µm)", "µm")
 
-    # ── Longueur ─────────────────────────────────────────────────────────────
-    fig_len = _boxplot(fib_f, "length_um", "Longueur (µm)")
-
-    # ── Orientations ─────────────────────────────────────────────────────────
+    # ── Orientations ─────────────────────────────────────────────────────
     fig_ori = go.Figure()
     if not fib_f.empty and _has(fib_f, "orientation_theta", "material"):
-        for i, mat in enumerate(sorted(fib_f["material"].dropna().unique())):
+        mats = sorted(fib_f["material"].dropna().unique())
+        for i, mat in enumerate(mats):
             vals = fib_f[fib_f["material"] == mat]["orientation_theta"].dropna()
             if vals.empty:
                 continue
@@ -732,162 +859,100 @@ def update_all(mat_sel, bat_sel):
                 marker_color=mat_color(mat, i),
                 marker_line=dict(color="white", width=0.8),
                 opacity=0.55, nbinsx=20, histnorm="percent",
+                visible=True if i == 0 else "legendonly",
                 hovertemplate=f"<b>{mat}</b><br>θ = %{{x:.0f}}°<br>%{{y:.1f}} % des fibres<extra></extra>",
             ))
+        fig_ori.update_layout(
+            **PLOT_LAYOUT,
+            barmode="overlay",
+            xaxis_title="θ (degrés)",
+            yaxis_title="% des fibres",
+            legend=_legend_h(),
+        )
+        apply_grid(fig_ori)
     else:
-        return kpis, _empty_fig(), _empty_fig(), _empty_fig("Colonne 'orientation_theta' non disponible"), \
-               _empty_fig(), _empty_fig(), _empty_fig(), _empty_fig(), _empty_fig()
+        fig_ori = _empty_fig("Colonne 'orientation_theta' non disponible")
 
-    fig_ori.update_layout(
-        **PLOT_LAYOUT,
-        barmode="overlay",
-        xaxis_title="θ (degrés)",
-        yaxis_title="% des fibres",
-        legend=dict(
-            orientation="h", y=1.12, x=0, font_size=11,
-            bgcolor="rgba(241,245,249,0.95)",
-            bordercolor="#CBD5E1", borderwidth=1,
-            title=dict(text="☑ Matériaux — cliquez pour afficher/masquer :", font_size=11, font_color="#334155"),
-        ),
-    )
-    apply_grid(fig_ori)
-
-    # ── Courbure ─────────────────────────────────────────────────────────────
+    # ── Courbure ─────────────────────────────────────────────────────────
     if not fib_f.empty and "curvature" in fib_f.columns:
         fc = fib_f.copy()
         fc["curvature_scaled"] = fc["curvature"] * 1000
-        fig_curv = _boxplot(fc, "curvature_scaled", "κ × 10³ (mm⁻¹)")
+        fig_curv = _boxplot(fc, "curvature_scaled", "κ × 10³ (mm⁻¹)", "×10³ mm⁻¹")
     else:
         fig_curv = _empty_fig("Colonne 'curvature' non disponible")
 
-    # ── Aires de contact ──────────────────────────────────────────────────────
+    # ── Aires de contact ──────────────────────────────────────────────────
     fig_ca = go.Figure()
     if not con_f.empty and _has(con_f, "contact_area_um2", "material"):
-        for i, mat in enumerate(sorted(con_f["material"].dropna().unique())):
+        mats = sorted(con_f["material"].dropna().unique())
+        for i, mat in enumerate(mats):
             vals = con_f[con_f["material"] == mat]["contact_area_um2"].dropna()
             if vals.empty:
                 continue
-            p99 = vals.quantile(0.99)
+            p99  = vals.quantile(0.99)
             vals = vals[vals <= p99]
             fig_ca.add_trace(go.Histogram(
                 x=vals, name=mat,
                 marker_color=mat_color(mat, i),
                 marker_line=dict(color="white", width=0.8),
                 opacity=0.55, nbinsx=30, histnorm="percent",
-                hovertemplate=f"<b>{mat}</b><br>%{{x:.0f}} µm²<br>%{{y:.1f}} % des contacts<extra></extra>",
+                visible=True if i == 0 else "legendonly",
+                hovertemplate=f"<b>{mat}</b><br>Aire = %{{x:.0f}} µm²<br>%{{y:.1f}} % des contacts<extra></extra>",
             ))
         fig_ca.update_layout(
             **PLOT_LAYOUT,
             barmode="overlay",
             xaxis_title="Aire de contact (µm²)",
             yaxis_title="% des contacts",
-            legend=dict(
-                orientation="h", y=1.12, x=0, font_size=11,
-                bgcolor="rgba(241,245,249,0.95)",
-                bordercolor="#CBD5E1", borderwidth=1,
-                title=dict(text="☑ Matériaux — cliquez pour afficher/masquer :", font_size=11, font_color="#334155"),
-            ),
+            legend=_legend_h(),
         )
         apply_grid(fig_ca)
     else:
         fig_ca = _empty_fig("Colonnes 'contact_area_um2' ou 'material' non disponibles")
 
-    # ── Densité connexions vs Porosité ────────────────────────────────────────
+    # ── Densité connexions vs Porosité ────────────────────────────────────
     fig_dp = go.Figure()
     if not samp_f.empty and _has(samp_f, "porosity", "contact_density", "material"):
         for i, mat in enumerate(sorted(samp_f["material"].dropna().unique())):
-            sub = samp_f[samp_f["material"] == mat]
+            grp = samp_f[samp_f["material"] == mat]
             fig_dp.add_trace(go.Scatter(
-                x=sub["porosity"], y=sub["contact_density"],
+                x=grp["porosity"], y=grp["contact_density"],
                 mode="markers", name=mat,
                 marker=dict(color=mat_color(mat, i), size=12,
                             line=dict(width=1.5, color="white")),
-                text=sub.get("sample_id"),
+                text=grp.get("sample_id"),
+                visible=True if i == 0 else "legendonly",
                 hovertemplate=(
                     "<b>%{text}</b><br>"
                     "Porosité : %{x:.3f}<br>"
-                    "Densité de connexions : %{y:.1f} N/mm³"
+                    "Densité de connexions : %{y:.1f} contacts/mm³"
                     "<extra></extra>"
                 ),
             ))
         fig_dp.update_layout(
             **PLOT_LAYOUT,
             xaxis_title="Porosité",
-            yaxis_title="Densité de connexions (N/mm³)",
-            legend=dict(
-                orientation="h", y=1.12, x=0, font_size=11,
-                bgcolor="rgba(241,245,249,0.95)",
-                bordercolor="#CBD5E1", borderwidth=1,
-                title=dict(text="☑ Matériaux — cliquez pour afficher/masquer :", font_size=11, font_color="#334155"),
-            ),
+            yaxis_title="Densité de connexions (contacts/mm³)",
+            legend=_legend_h(),
         )
         apply_grid(fig_dp)
     else:
         fig_dp = _empty_fig("Colonnes 'porosity', 'contact_density' ou 'material' non disponibles")
 
-    # ── Absorption acoustique ─────────────────────────────────────────────────
-    freq_vals = [250, 500, 1000, 2000, 4000]
-    freq_cols = ["absorption_250hz","absorption_500hz","absorption_1000hz",
-                 "absorption_2000hz","absorption_4000hz"]
-    fig_abs = go.Figure()
-    if not aco_f.empty and all(c in aco_f.columns for c in freq_cols):
-        shown = 0
-        for i, (_, row) in enumerate(aco_f.iterrows()):
-            vals = [row[c] for c in freq_cols]
-            if any(pd.isna(v) for v in vals):
-                continue
-            mat = row.get("material", "—")
-            sid = row.get("sample_id", f"#{i}")
-            fig_abs.add_trace(go.Scatter(
-                x=freq_vals, y=vals,
-                mode="lines+markers",
-                name=f"{sid}",
-                line=dict(color=mat_color(mat, i), width=2),
-                marker=dict(size=5),
-                opacity=0.8,
-                hovertemplate=f"<b>{sid} ({mat})</b><br>%{{x}} Hz → α = %{{y:.3f}}<extra></extra>",
-            ))
-            shown += 1
-        if shown > 1:
-            medians = [aco_f[c].dropna().median() for c in freq_cols]
-            fig_abs.add_trace(go.Scatter(
-                x=freq_vals, y=medians, mode="lines",
-                name="Médiane",
-                line=dict(color="#0F172A", width=3, dash="dot"),
-                hovertemplate="Médiane<br>%{x} Hz → α = %{y:.3f}<extra></extra>",
-            ))
-    fig_abs.update_layout(
-        **PLOT_LAYOUT,
-        xaxis=dict(
-            title="Fréquence (Hz)",
-            tickvals=freq_vals,
-            ticktext=["250 Hz","500 Hz","1 kHz","2 kHz","4 kHz"],
-            **{k: v for k, v in AXIS_STYLE.items() if k != "title_font"},
-            title_font=AXIS_STYLE["title_font"],
-        ),
-        yaxis=dict(
-            title="Coefficient d'absorption α",
-            range=[0, 1.05],
-            **{k: v for k, v in AXIS_STYLE.items() if k != "title_font"},
-            title_font=AXIS_STYLE["title_font"],
-        ),
-        legend=dict(orientation="v", x=1.01, y=1, font_size=10, bgcolor="rgba(0,0,0,0)"),
-    )
-
-    # ── Résistivité vs Porosité ───────────────────────────────────────────────
+    # ── Résistivité vs Porosité ───────────────────────────────────────────
     fig_res = go.Figure()
     if not aco_f.empty and _has(aco_f, "porosity", "airflow_resistivity", "material"):
         for i, mat in enumerate(sorted(aco_f["material"].dropna().unique())):
-            sub = aco_f[aco_f["material"] == mat].dropna(
-                subset=["porosity", "airflow_resistivity"])
-            if sub.empty:
+            grp = aco_f[aco_f["material"] == mat].dropna(subset=["porosity", "airflow_resistivity"])
+            if grp.empty:
                 continue
             fig_res.add_trace(go.Scatter(
-                x=sub["porosity"], y=sub["airflow_resistivity"],
+                x=grp["porosity"], y=grp["airflow_resistivity"],
                 mode="markers", name=mat,
                 marker=dict(color=mat_color(mat, i), size=12,
                             line=dict(width=1.5, color="white")),
-                text=sub.get("sample_id"),
+                text=grp.get("sample_id"),
+                visible=True if i == 0 else "legendonly",
                 hovertemplate=(
                     "<b>%{text}</b><br>"
                     "Porosité : %{x:.3f}<br>"
@@ -912,19 +977,202 @@ def update_all(mat_sel, bat_sel):
             xaxis_title="Porosité",
             yaxis_title="Résistivité σ (Pa·s/m²)",
             yaxis_type="log",
-            legend=dict(
-                orientation="h", y=1.12, x=0, font_size=11,
-                bgcolor="rgba(241,245,249,0.95)",
-                bordercolor="#CBD5E1", borderwidth=1,
-                title=dict(text="☑ Matériaux — cliquez pour afficher/masquer :", font_size=11, font_color="#334155"),
-            ),
+            legend=_legend_h(),
         )
         apply_grid(fig_res)
     else:
         fig_res = _empty_fig("Colonnes 'airflow_resistivity' ou 'porosity' non disponibles")
 
+    # ── Classement acoustique par matériau ────────────────────────────────
+    fig_ranking = go.Figure()
+    if not aco_f.empty and all(c in aco_f.columns for c in FREQ_COLS) and _has(aco_f, "material"):
+        for i, mat in enumerate(sorted(aco_f["material"].dropna().unique())):
+            grp = aco_f[aco_f["material"] == mat][FREQ_COLS].dropna()
+            if grp.empty:
+                continue
+            means = [grp[c].mean() for c in FREQ_COLS]
+            fig_ranking.add_trace(go.Scatter(
+                x=FREQ_VALS, y=means,
+                mode="lines+markers",
+                name=mat,
+                line=dict(color=mat_color(mat, i), width=2.5),
+                marker=dict(size=8, symbol="circle",
+                            line=dict(width=1.5, color="white")),
+                hovertemplate=f"<b>{mat}</b><br>%{{x}} Hz → α moyen = %{{y:.3f}}<extra></extra>",
+            ))
+        fig_ranking.update_layout(
+            **PLOT_LAYOUT,
+            xaxis=dict(
+                title="Fréquence (Hz)",
+                tickvals=FREQ_VALS,
+                ticktext=["250 Hz", "500 Hz", "1 kHz", "2 kHz", "4 kHz"],
+                **{k: v for k, v in AXIS_STYLE.items() if k != "title_font"},
+                title_font=AXIS_STYLE["title_font"],
+            ),
+            yaxis=dict(
+                title="Coefficient d'absorption α moyen",
+                range=[0, 1.05],
+                **{k: v for k, v in AXIS_STYLE.items() if k != "title_font"},
+                title_font=AXIS_STYLE["title_font"],
+            ),
+            legend=_legend_v(),
+        )
+    else:
+        fig_ranking = _empty_fig("Données d'absorption insuffisantes pour comparer les matériaux")
+
+    # ── Store acoustique pour le panneau de sélection ─────────────────────
+    acou_store = []
+    if not aco_f.empty and all(c in aco_f.columns for c in FREQ_COLS) and _has(aco_f, "sample_id", "material"):
+        cols = ["sample_id", "material"] + FREQ_COLS
+        acou_store = aco_f[cols].dropna(subset=FREQ_COLS).to_dict("records")
+
     return (kpis, fig_diam, fig_len, fig_ori, fig_curv,
-            fig_ca, fig_dp, fig_abs, fig_res)
+            fig_ca, fig_dp, fig_res, fig_ranking, acou_store)
+
+
+# ─── Callback : options et sélection du panneau échantillons ────────────────
+@app.callback(
+    Output("acou-checklist", "options"),
+    Output("acou-checklist", "value"),
+    Input("acou-data-store",    "data"),
+    Input("acou-search",        "value"),
+    Input("acou-select-all",    "n_clicks"),
+    Input("acou-deselect-all",  "n_clicks"),
+    State("acou-checklist",     "value"),
+)
+def update_acoustic_options(store_data, search, _n_all, _n_none, current_val):
+    records = store_data or []
+
+    # Index matériaux pour les couleurs
+    mats_seen = {}
+    mat_idx = 0
+    for rec in records:
+        m = rec.get("material", "?")
+        if m not in mats_seen:
+            mats_seen[m] = mat_idx
+            mat_idx += 1
+
+    # Construire toutes les options (label HTML = carré coloré + texte)
+    all_options = []
+    for rec in records:
+        sid = str(rec["sample_id"])
+        mat = rec.get("material", "?")
+        color = mat_color(mat, mats_seen.get(mat, 0))
+        label = html.Span([
+            html.Span("■ ", style={"color": color, "fontWeight": "bold", "fontSize": "14px"}),
+            html.Span(sid,  style={"fontWeight": 600, "fontSize": "12px", "color": "#1E293B"}),
+            html.Span(f" ({mat})", style={"fontSize": "11px", "color": "#64748B"}),
+        ])
+        all_options.append({"label": label, "value": sid})
+
+    # Filtrer par recherche
+    if search:
+        s = search.lower()
+        filtered_options = [
+            o for o, rec in zip(all_options, records)
+            if s in str(rec["sample_id"]).lower() or s in rec.get("material", "").lower()
+        ]
+    else:
+        filtered_options = all_options
+
+    all_ids = [o["value"] for o in all_options]
+    filtered_ids = [o["value"] for o in filtered_options]
+
+    # Déterminer la nouvelle sélection
+    triggered_id = ctx.triggered_id if ctx.triggered_id else ""
+
+    if triggered_id == "acou-select-all":
+        new_val = filtered_ids
+    elif triggered_id == "acou-deselect-all":
+        new_val = []
+    elif triggered_id == "acou-data-store":
+        # Nouvelles données : afficher seulement le premier échantillon
+        new_val = [filtered_ids[0]] if filtered_ids else []
+    else:
+        # Recherche : garder la sélection courante valide
+        new_val = [v for v in (current_val or []) if v in all_ids]
+
+    return filtered_options, new_val
+
+
+# ─── Callback : graphique d'absorption ───────────────────────────────────────
+@app.callback(
+    Output("graph-absorption", "figure"),
+    Input("acou-checklist",  "value"),
+    State("acou-data-store", "data"),
+)
+def update_absorption_graph(selected_ids, store_data):
+    records = store_data or []
+    selected_ids = selected_ids or []
+
+    if not records:
+        return _empty_fig("Données d'absorption acoustique non disponibles")
+    if not selected_ids:
+        return _empty_fig("Sélectionnez au moins un échantillon dans le panneau de droite")
+
+    # Index matériaux
+    mats_seen = {}
+    mat_idx = 0
+    for rec in records:
+        m = rec.get("material", "?")
+        if m not in mats_seen:
+            mats_seen[m] = mat_idx
+            mat_idx += 1
+
+    fig = go.Figure()
+    for rec in records:
+        sid = str(rec["sample_id"])
+        if sid not in selected_ids:
+            continue
+        mat  = rec.get("material", "?")
+        vals = [rec.get(c) for c in FREQ_COLS]
+        if any(v is None or (isinstance(v, float) and np.isnan(v)) for v in vals):
+            continue
+        color = mat_color(mat, mats_seen.get(mat, 0))
+        fig.add_trace(go.Scatter(
+            x=FREQ_VALS, y=vals,
+            mode="lines+markers",
+            name=f"{sid} ({mat})",
+            line=dict(color=color, width=2.5),
+            marker=dict(size=6, line=dict(width=1, color="white")),
+            hovertemplate=f"<b>{sid} ({mat})</b><br>%{{x}} Hz → α = %{{y:.3f}}<extra></extra>",
+        ))
+
+    if len(selected_ids) > 1:
+        # Médiane sur les échantillons sélectionnés
+        sel_records = [r for r in records if str(r["sample_id"]) in selected_ids]
+        medians = [
+            float(np.median([r.get(c, np.nan) for r in sel_records if r.get(c) is not None]))
+            for c in FREQ_COLS
+        ]
+        if not any(np.isnan(m) for m in medians):
+            fig.add_trace(go.Scatter(
+                x=FREQ_VALS, y=medians, mode="lines",
+                name="Médiane sélection",
+                line=dict(color="#0F172A", width=3, dash="dot"),
+                hovertemplate="Médiane<br>%{x} Hz → α = %{y:.3f}<extra></extra>",
+            ))
+
+    fig.update_layout(
+        **PLOT_LAYOUT,
+        xaxis=dict(
+            title="Fréquence (Hz)",
+            tickvals=FREQ_VALS,
+            ticktext=["250 Hz", "500 Hz", "1 kHz", "2 kHz", "4 kHz"],
+            **{k: v for k, v in AXIS_STYLE.items() if k != "title_font"},
+            title_font=AXIS_STYLE["title_font"],
+        ),
+        yaxis=dict(
+            title="Coefficient d'absorption α",
+            range=[0, 1.05],
+            **{k: v for k, v in AXIS_STYLE.items() if k != "title_font"},
+            title_font=AXIS_STYLE["title_font"],
+        ),
+        legend=dict(orientation="v", x=1.01, y=1, font_size=10,
+                    bgcolor="rgba(248,250,252,0.9)", bordercolor="#CBD5E1", borderwidth=1),
+    )
+    apply_grid(fig)
+    return fig
 
 
 # ─── Reset filtres ────────────────────────────────────────────────────────────
