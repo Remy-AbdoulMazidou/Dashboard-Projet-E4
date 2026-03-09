@@ -1147,7 +1147,6 @@ def update_absorption_graph(selected_ids, store_data):
             font_size=10, bgcolor="rgba(248,250,252,0.9)",
             bordercolor="#CBD5E1", borderwidth=1,
         ),
-        margin=dict(l=60, r=10, t=20, b=50),
     )
     apply_grid(fig)
     return fig
