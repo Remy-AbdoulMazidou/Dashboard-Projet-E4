@@ -122,15 +122,15 @@ PLOT_LAYOUT = dict(
     plot_bgcolor="#F8FAFC",
     font=dict(family="Inter, system-ui, sans-serif", size=12, color="#334155"),
     margin=dict(l=70, r=24, t=32, b=60),
-    hoverlabel=dict(bgcolor="white", bordercolor="#E2E8F0", font_size=12),
+    hoverlabel=dict(bgcolor="#1E293B", bordercolor="#0F172A", font_size=12, font_color="white"),
 )
 
 AXIS_STYLE = dict(
-    showgrid=True,  gridcolor="#E2E8F0",  gridwidth=1,
-    zeroline=True,  zerolinecolor="#CBD5E1", zerolinewidth=1,
-    showline=True,  linecolor="#CBD5E1",  linewidth=1,
+    showgrid=True,  gridcolor="#94A3B8",  gridwidth=1,
+    zeroline=True,  zerolinecolor="#64748B", zerolinewidth=1.5,
+    showline=True,  linecolor="#64748B",  linewidth=1,
     title_font=dict(size=13, color="#1E293B", family="Inter, system-ui, sans-serif"),
-    tickfont=dict(size=11, color="#475569"),
+    tickfont=dict(size=11, color="#334155"),
 )
 
 def apply_grid(fig):
@@ -236,7 +236,7 @@ def graph_card(graph_id, title, description, read_guide, height="310px", col_wid
             # Graphique
             dcc.Graph(id=graph_id, config=PLOT_CONFIG, style={"height": height}),
         ])
-    ]), md=col_width, className="mb-4")
+    ]), xs=12, md=col_width, className="mb-4")
 
 
 def kpi_card(label, value, expl, color):
@@ -347,34 +347,37 @@ app.layout = dbc.Container(fluid=True, style={
                         ),
                     ], md=5),
                     dbc.Col([
-                        html.Label("Lot de fabrication", style={
-                            "fontWeight": 700, "fontSize": "12px",
-                            "color": "#334155", "marginBottom": "5px", "display": "block",
-                        }),
-                        dcc.Dropdown(
-                            id="filter-batch",
-                            options=[{"label": b, "value": b} for b in BATCHES],
-                            multi=True,
-                            placeholder="Tous les lots",
-                            style={"fontSize": "13px"},
-                        ),
-                    ], md=4),
-                    dbc.Col([
-                        dbc.Button(
-                            "Tout afficher",
-                            id="btn-reset",
-                            style={
-                                "border":           "1px solid #CBD5E1",
-                                "backgroundColor":  "white",
-                                "color":            "#475569",
-                                "fontWeight":       700,
-                                "fontSize":         "12px",
-                                "width":            "100%",
-                                "borderRadius":     "8px",
-                                "padding":          "9px 0",
-                            },
-                        )
-                    ], md=3),
+                        html.Div(style={"display": "flex", "gap": "10px", "alignItems": "flex-end"}, children=[
+                            html.Div(style={"flex": 1}, children=[
+                                html.Label("Lot de fabrication", style={
+                                    "fontWeight": 700, "fontSize": "12px",
+                                    "color": "#334155", "marginBottom": "5px", "display": "block",
+                                }),
+                                dcc.Dropdown(
+                                    id="filter-batch",
+                                    options=[{"label": b, "value": b} for b in BATCHES],
+                                    multi=True,
+                                    placeholder="Tous les lots",
+                                    style={"fontSize": "13px"},
+                                ),
+                            ]),
+                            dbc.Button(
+                                "Tout afficher",
+                                id="btn-reset",
+                                style={
+                                    "border":           "1px solid #CBD5E1",
+                                    "backgroundColor":  "white",
+                                    "color":            "#475569",
+                                    "fontWeight":       700,
+                                    "fontSize":         "12px",
+                                    "whiteSpace":       "nowrap",
+                                    "borderRadius":     "8px",
+                                    "padding":          "9px 16px",
+                                    "flexShrink":       0,
+                                },
+                            ),
+                        ]),
+                    ], md=7),
                 ]),
             ]),
         ]))
@@ -436,7 +439,7 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Courbure κ : ondulation de la fibre — modifie la tortuosité des pores et l'absorption acoustique.",
                                 ],
                             ),
-                            dbc.Row(className="px-1", children=[
+                            dbc.Row(className="px-1 g-3", children=[
                                 graph_card(
                                     "graph-diameter",
                                     "Diamètre des fibres par matériau (µm)",
@@ -459,7 +462,7 @@ app.layout = dbc.Container(fluid=True, style={
                                     accent=TABS["morphology"]["bg"],
                                 ),
                             ]),
-                            dbc.Row(className="px-1", children=[
+                            dbc.Row(className="px-1 g-3", children=[
                                 graph_card(
                                     "graph-orientation",
                                     "Distribution des orientations angulaires θ",
@@ -508,7 +511,7 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Un réseau dense (faible porosité) crée plus de contacts, donc une meilleure absorption.",
                                 ],
                             ),
-                            dbc.Row(className="px-1", children=[
+                            dbc.Row(className="px-1 g-3", children=[
                                 graph_card(
                                     "graph-contact-area",
                                     "Distribution des aires de contact fibre-fibre (µm²)",
@@ -558,7 +561,7 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Objectif : σ ni trop faible (son traverse) ni trop élevée (son réfléchi).",
                                 ],
                             ),
-                            dbc.Row(className="px-1", children=[
+                            dbc.Row(className="px-1 g-3", children=[
                                 graph_card(
                                     "graph-absorption",
                                     "Coefficient d'absorption acoustique par fréquence",
@@ -709,9 +712,6 @@ def update_all(mat_sel, bat_sel):
         kpi_card("Porosité moyenne",
                  f"{mean_por:.3f}" if mean_por is not None else "—",
                  "Fraction de vide dans le matériau (0 = plein, 1 = creux)", "#B45309"),
-        kpi_card("Score qualité moyen",
-                 f"{mean_qual:.1f} / 5" if mean_qual is not None else "—",
-                 "Qualité moyenne de la reconstruction 3D", "#DC2626"),
     ]
 
     # ── Diamètre ─────────────────────────────────────────────────────────────
@@ -730,7 +730,8 @@ def update_all(mat_sel, bat_sel):
             fig_ori.add_trace(go.Histogram(
                 x=vals, name=mat,
                 marker_color=mat_color(mat, i),
-                opacity=0.72, nbinsx=20, histnorm="percent",
+                marker_line=dict(color="white", width=0.8),
+                opacity=0.55, nbinsx=20, histnorm="percent",
                 hovertemplate=f"<b>{mat}</b><br>θ = %{{x:.0f}}°<br>%{{y:.1f}} % des fibres<extra></extra>",
             ))
     else:
@@ -742,7 +743,12 @@ def update_all(mat_sel, bat_sel):
         barmode="overlay",
         xaxis_title="θ (degrés)",
         yaxis_title="% des fibres",
-        legend=dict(orientation="h", y=1.06, x=0, font_size=11, bgcolor="rgba(0,0,0,0)"),
+        legend=dict(
+            orientation="h", y=1.12, x=0, font_size=11,
+            bgcolor="rgba(241,245,249,0.95)",
+            bordercolor="#CBD5E1", borderwidth=1,
+            title=dict(text="☑ Matériaux — cliquez pour afficher/masquer :", font_size=11, font_color="#334155"),
+        ),
     )
     apply_grid(fig_ori)
 
@@ -766,7 +772,8 @@ def update_all(mat_sel, bat_sel):
             fig_ca.add_trace(go.Histogram(
                 x=vals, name=mat,
                 marker_color=mat_color(mat, i),
-                opacity=0.72, nbinsx=30, histnorm="percent",
+                marker_line=dict(color="white", width=0.8),
+                opacity=0.55, nbinsx=30, histnorm="percent",
                 hovertemplate=f"<b>{mat}</b><br>%{{x:.0f}} µm²<br>%{{y:.1f}} % des contacts<extra></extra>",
             ))
         fig_ca.update_layout(
@@ -774,7 +781,12 @@ def update_all(mat_sel, bat_sel):
             barmode="overlay",
             xaxis_title="Aire de contact (µm²)",
             yaxis_title="% des contacts",
-            legend=dict(orientation="h", y=1.06, x=0, font_size=11, bgcolor="rgba(0,0,0,0)"),
+            legend=dict(
+                orientation="h", y=1.12, x=0, font_size=11,
+                bgcolor="rgba(241,245,249,0.95)",
+                bordercolor="#CBD5E1", borderwidth=1,
+                title=dict(text="☑ Matériaux — cliquez pour afficher/masquer :", font_size=11, font_color="#334155"),
+            ),
         )
         apply_grid(fig_ca)
     else:
@@ -802,7 +814,12 @@ def update_all(mat_sel, bat_sel):
             **PLOT_LAYOUT,
             xaxis_title="Porosité",
             yaxis_title="Densité de connexions (N/mm³)",
-            legend=dict(orientation="h", y=1.06, x=0, font_size=11, bgcolor="rgba(0,0,0,0)"),
+            legend=dict(
+                orientation="h", y=1.12, x=0, font_size=11,
+                bgcolor="rgba(241,245,249,0.95)",
+                bordercolor="#CBD5E1", borderwidth=1,
+                title=dict(text="☑ Matériaux — cliquez pour afficher/masquer :", font_size=11, font_color="#334155"),
+            ),
         )
         apply_grid(fig_dp)
     else:
@@ -895,7 +912,12 @@ def update_all(mat_sel, bat_sel):
             xaxis_title="Porosité",
             yaxis_title="Résistivité σ (Pa·s/m²)",
             yaxis_type="log",
-            legend=dict(orientation="h", y=1.06, x=0, font_size=11, bgcolor="rgba(0,0,0,0)"),
+            legend=dict(
+                orientation="h", y=1.12, x=0, font_size=11,
+                bgcolor="rgba(241,245,249,0.95)",
+                bordercolor="#CBD5E1", borderwidth=1,
+                title=dict(text="☑ Matériaux — cliquez pour afficher/masquer :", font_size=11, font_color="#334155"),
+            ),
         )
         apply_grid(fig_res)
     else:
