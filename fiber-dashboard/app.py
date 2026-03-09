@@ -9,19 +9,8 @@ from dash import html, dcc, Input, Output
 from components.sidebar import sidebar
 from config import PORT, DEBUG
 
-from pages import (
-    home,
-    overview,
-    samples,
-    microstructure,
-    parameters,
-    robustness,
-    correlations,
-    acoustic_thermal,
-    quality,
-    algorithm,
-    properties,
-)
+from pages import home, microstructure, algorithme
+from pages import acoustic_thermal, correlations
 
 app = dash.Dash(
     __name__,
@@ -35,10 +24,10 @@ app.layout = html.Div([
     dcc.Location(id="url", refresh=False),
     html.Div(id="_nav_active", style={"display": "none"}),
 
-    # Full-screen home shell (shown only on /)
+    # Full-screen home (shown only on /)
     html.Div(id="home-shell"),
 
-    # Sidebar + content shell (shown on all other routes)
+    # Sidebar + content (shown on all other routes)
     html.Div(
         [
             sidebar(),
@@ -55,17 +44,10 @@ app.layout = html.Div([
 
 
 ROUTES = {
-    "/overview":      overview.layout,
     "/microstructure": microstructure.layout,
-    "/properties":    properties.layout,
-    "/algorithm":     algorithm.layout,
-    # keep legacy routes working
-    "/samples":       samples.layout,
-    "/parameters":    parameters.layout,
-    "/robustness":    robustness.layout,
-    "/correlations":  correlations.layout,
-    "/acoustic-thermal": acoustic_thermal.layout,
-    "/quality":       quality.layout,
+    "/acoustique":     acoustic_thermal.layout,
+    "/correlations":   correlations.layout,
+    "/algorithme":     algorithme.layout,
 }
 
 
@@ -86,7 +68,7 @@ def toggle_shells(pathname):
     Input("url", "pathname"),
 )
 def render_page(pathname):
-    page_fn = ROUTES.get(pathname, overview.layout)
+    page_fn = ROUTES.get(pathname, microstructure.layout)
     return page_fn()
 
 
@@ -97,8 +79,7 @@ app.clientside_callback(
             el.classList.remove('active');
         });
         if (pathname && pathname !== '/') {
-            var links = document.querySelectorAll('.nav-link');
-            links.forEach(function(el) {
+            document.querySelectorAll('.nav-link').forEach(function(el) {
                 if (el.getAttribute('href') === pathname) {
                     el.classList.add('active');
                 }

@@ -2,7 +2,7 @@ from dash import html, dcc, callback, Input, Output
 
 from components.filters import material_filter, batch_filter, filter_bar
 from components.kpi_card import kpi_card
-from components.info_box import info_box, guide_box, warn_box, chart_header
+from components.info_box import info_box, guide_box, conclusion_box, chart_header
 from utils.data_loader import load_fibers, filter_samples
 from utils import figures as fig_utils
 from config import COLORS
@@ -10,152 +10,151 @@ from config import COLORS
 
 def layout() -> html.Div:
     return html.Div([
-        html.H2("Descripteurs microstructuraux", className="page-title"),
+
+        # ── En-tête ──────────────────────────────────────────────────────
+        html.H2("🔬 Microstructure des fibres", className="page-title"),
         html.P(
-            "Analyse morphologique des fibres extraites par segmentation µ-CT : "
-            "taille, forme, orientation et contacts entre fibres.",
+            "Analyse morphologique complète des fibres extraites par segmentation µ-CT : "
+            "distributions de taille, orientations 3D et comparaisons entre matériaux.",
             className="page-subtitle",
         ),
 
-        # ── Section 1 : Vue générale ─────────────────────────────────────────
+        # ── Filtres ──────────────────────────────────────────────────────
         filter_bar(
             material_filter("ms-filter-material"),
             batch_filter("ms-filter-batch"),
         ),
-        info_box(
-            "Les indicateurs ci-dessous décrivent la géométrie moyenne des fibres "
-            "pour les échantillons sélectionnés. La dispersion d'orientation mesure "
-            "l'uniformité directionnelle (0° = toutes parallèles, 90° = aléatoire)."
-        ),
+
+        # ── KPIs ─────────────────────────────────────────────────────────
         html.Div(id="ms-kpi-row", className="kpi-row"),
 
+        # ── Section 1 : Distributions par matériau ───────────────────────
+        html.H3("Distributions morphologiques par matériau", className="section-separator"),
+        info_box(
+            "Les boîtes à moustaches comparent la distribution du diamètre et de la longueur "
+            "entre les 6 matériaux. La ligne centrale = médiane, la boîte = 50 % des valeurs "
+            "(Q1–Q3), les moustaches = valeurs extrêmes, les points = données aberrantes."
+        ),
         html.Div([
             html.Div([
                 chart_header(
-                    "Distribution des diamètres",
-                    "Histogramme du diamètre de toutes les fibres. Un pic étroit indique "
-                    "une fabrication homogène. Un pic large ou bimodal signale plusieurs populations de fibres.",
+                    "Diamètre par matériau (µm)",
+                    "Un diamètre plus faible augmente la surface de contact avec l'air, "
+                    "ce qui améliore l'absorption acoustique par friction visqueuse.",
                 ),
-                dcc.Graph(id="ms-hist-diameter"),
+                dcc.Graph(id="ms-box-diameter", style={"height": "340px"}),
             ], className="card col-6"),
             html.Div([
                 chart_header(
-                    "Distribution des longueurs",
-                    "Histogramme des longueurs de fibres. Des fibres très longues augmentent "
-                    "l'interconnexion du réseau et influencent la résistivité à l'écoulement.",
+                    "Longueur par matériau (µm)",
+                    "Des fibres plus longues favorisent l'interconnexion du réseau fibreux "
+                    "et influencent la perméabilité thermique du matériau.",
                 ),
-                dcc.Graph(id="ms-hist-length"),
-            ], className="card col-6"),
-        ], className="row"),
-
-        html.Div([
-            html.Div([
-                chart_header(
-                    "Diamètres par matériau",
-                    "Boîtes à moustaches : la ligne centrale = médiane, la boîte = 50 % des valeurs, "
-                    "les moustaches = valeurs extrêmes. Comparez la dispersion entre matériaux.",
-                ),
-                dcc.Graph(id="ms-box-diameter"),
-            ], className="card col-6"),
-            html.Div([
-                chart_header(
-                    "Longueurs par matériau",
-                    "Même lecture que pour les diamètres. Un matériau avec une grande dispersion "
-                    "de longueurs peut produire des propriétés acoustiques moins prévisibles.",
-                ),
-                dcc.Graph(id="ms-box-length"),
+                dcc.Graph(id="ms-box-length", style={"height": "340px"}),
             ], className="card col-6"),
         ], className="row"),
 
-        html.Div([
-            html.Div([
-                chart_header(
-                    "Contacts moyens par fibre et par matériau",
-                    "Nombre moyen de points de contact entre fibres voisines. "
-                    "Un nombre élevé indique un réseau dense et interconnecté, "
-                    "ce qui influence la perméabilité thermique et l'absorption acoustique.",
-                ),
-                dcc.Graph(id="ms-bar-contacts"),
-            ], className="card col-12"),
-        ], className="row"),
-
-        # ── Section 2 : Distributions PDF ───────────────────────────────────
+        # ── Section 2 : Distributions de probabilité (KDE) ───────────────
         html.H3("Distributions de probabilité — style publication", className="section-separator"),
         info_box(
-            "Les courbes KDE (Kernel Density Estimation) montrent la distribution de probabilité "
-            "continue d'un descripteur pour chaque matériau. Contrairement à un histogramme, "
-            "la courbe est lissée et permet une meilleure comparaison entre groupes. "
+            "Les courbes KDE (Kernel Density Estimation) estiment la distribution continue "
+            "d'un descripteur pour chaque matériau. Contrairement à un histogramme, la courbe "
+            "est lissée par un noyau gaussien (règle de Silverman). "
             "Les lignes pointillées verticales indiquent la moyenne de chaque groupe."
         ),
-        guide_box("Comment interpréter une courbe KDE ?", [
-            "Un pic étroit et haut = fibres très uniformes pour ce descripteur.",
-            "Un pic large et plat = forte variabilité (moins contrôlé).",
-            "Deux pics (distribution bimodale) = deux populations distinctes coexistent.",
-            "Décalage entre matériaux = différence structurelle significative.",
+        guide_box("Comment lire une courbe KDE ?", [
+            "Pic étroit et haut → fibres très uniformes (bonne reproductibilité de fabrication).",
+            "Pic large et plat → forte variabilité (propriétés moins prévisibles).",
+            "Distribution bimodale (2 pics) → deux populations distinctes dans l'échantillon.",
+            "Décalage entre matériaux → différence microstructurale réelle à exploiter.",
+            "L'aire sous la courbe = 1 (densité de probabilité normalisée).",
         ]),
         html.Div([
             html.Div([
-                chart_header("PDF — Diamètre (µm)", "Distribution de probabilité du diamètre par matériau."),
-                dcc.Graph(id="ms-pdf-diameter"),
+                chart_header(
+                    "PDF — Diamètre (µm)",
+                    "Distribution de probabilité du diamètre de fibre par matériau. "
+                    "Le Nylon et le Carbone ont les distributions les plus contrastées.",
+                ),
+                dcc.Graph(id="ms-pdf-diameter", style={"height": "280px"}),
             ], className="card col-4"),
             html.Div([
-                chart_header("PDF — Angle azimutal ψ", "Orientation dans le plan de l'image (0–180°)."),
-                dcc.Graph(id="ms-pdf-psi"),
+                chart_header(
+                    "PDF — Angle azimutal ψ (0–180°)",
+                    "Orientation dans le plan de l'image. Une distribution uniforme = réseau isotrope. "
+                    "Un pic = orientation préférentielle dans le plan.",
+                ),
+                dcc.Graph(id="ms-pdf-psi", style={"height": "280px"}),
             ], className="card col-4"),
             html.Div([
-                chart_header("PDF — Angle zénithal θ", "Inclinaison hors plan (0° = perpendiculaire, 90° = in-plane)."),
-                dcc.Graph(id="ms-pdf-theta"),
+                chart_header(
+                    "PDF — Angle zénithal θ (0–90°)",
+                    "Inclinaison hors du plan. θ = 0° → fibre perpendiculaire au plan d'imagerie. "
+                    "θ = 90° → fibre couchée dans le plan.",
+                ),
+                dcc.Graph(id="ms-pdf-theta", style={"height": "280px"}),
             ], className="card col-4"),
         ], className="row"),
 
-        # ── Section 3 : Pole figure ─────────────────────────────────────────
-        html.H3("Pole figure — projection stéréographique", className="section-separator"),
+        # ── Section 3 : Figure de pôle ────────────────────────────────────
+        html.H3("Figure de pôle — projection stéréographique 3D", className="section-separator"),
         info_box(
-            "La figure de pôle représente l'orientation 3D de chaque fibre. "
-            "Le centre du cercle correspond aux fibres perpendiculaires au plan d'imagerie (θ = 0°), "
-            "le bord du cercle aux fibres dans le plan (θ = 90°). "
-            "L'angle azimutal ψ indique la direction dans le plan.",
+            "La figure de pôle représente l'orientation 3D de chaque fibre en 2D. "
+            "Le rayon = angle zénithal θ (centre = fibres ⊥ au plan, bord = fibres dans le plan). "
+            "L'angle angulaire = angle azimutal ψ dans le plan. "
+            "La taille des points est proportionnelle à la longueur de la fibre."
         ),
         guide_box("Comment lire la figure de pôle ?", [
-            "Concentration au centre → fibres principalement perpendiculaires au plan (orientation préférentielle).",
-            "Concentration à la périphérie → fibres couchées dans le plan (matériau en couches).",
-            "Distribution uniforme → réseau isotrope (aucune orientation privilégiée).",
-            "Taille des points proportionnelle à la longueur de la fibre.",
+            "Points concentrés au centre → fibres perpendiculaires au plan (orientation préférentielle).",
+            "Points à la périphérie → fibres couchées dans le plan (matériau en couches).",
+            "Distribution uniforme sur tout le cercle → réseau isotrope (aucune orientation dominante).",
+            "Couleurs distinctes par matériau → comparez les orientations préférentielles.",
+            "Cette visualisation est standard dans les publications de science des matériaux.",
         ]),
         html.Div([
             html.Div([
-                dcc.Graph(id="ms-pole-figure"),
+                dcc.Graph(id="ms-pole-figure", style={"height": "520px"}),
             ], className="card col-12"),
         ], className="row"),
+
+        # ── Conclusion ───────────────────────────────────────────────────
+        conclusion_box(
+            "Résultats clés — Microstructure",
+            "Les 6 matériaux présentent des géométries fibreuses très distinctes : le Carbone "
+            "possède les fibres les plus fines (Ø ~7 µm, absorption maximale attendue), tandis que "
+            "le Chanvre présente les fibres les plus épaisses (Ø ~30 µm). Les courbes KDE montrent "
+            "que le Nylon et le PET recyclé ont des distributions de diamètre plus larges, "
+            "suggérant une variabilité de fabrication plus importante. La figure de pôle révèle "
+            "que la plupart des matériaux ont une légère orientation préférentielle dans le plan "
+            "(θ moyen > 45°), ce qui influence directement leur résistivité à l'écoulement.",
+        ),
 
     ], className="page-content")
 
 
 @callback(
     Output("ms-kpi-row", "children"),
-    Output("ms-hist-diameter", "figure"),
-    Output("ms-hist-length", "figure"),
     Output("ms-box-diameter", "figure"),
     Output("ms-box-length", "figure"),
-    Output("ms-bar-contacts", "figure"),
     Input("ms-filter-material", "value"),
     Input("ms-filter-batch", "value"),
 )
-def update_overview(materials, batches):
+def update_morphology(materials, batches):
     filtered_samples = filter_samples(materials=materials or None, batches=batches or None)
     fibers = load_fibers()
     fibers = fibers[fibers["sample_id"].isin(filtered_samples["sample_id"])]
-    fibers_with_material = fibers.merge(
+    fibers_mat = fibers.merge(
         filtered_samples[["sample_id", "material"]], on="sample_id", how="left"
     )
 
     if fibers.empty:
         empty = fig_utils.empty_figure("Aucune donnée pour ce filtre")
-        return html.Div(), empty, empty, empty, empty, empty
+        return html.Div(), empty, empty
 
-    disp_df = fibers_with_material.merge(
+    disp_df = fibers_mat.merge(
         filtered_samples[["sample_id", "orientation_dispersion"]], on="sample_id", how="left"
     )
+
     kpis = html.Div([
         kpi_card("◎", f"{fibers['diameter_um'].mean():.2f} µm", "Diamètre moyen", color=COLORS["primary"]),
         kpi_card("↔", f"{fibers['length_um'].mean():.1f} µm", "Longueur moyenne", color=COLORS["success"]),
@@ -163,25 +162,11 @@ def update_overview(materials, batches):
         kpi_card("≡", str(len(fibers)), "Fibres analysées", color=COLORS["neutral"]),
     ], className="kpi-row")
 
-    hist_d = fig_utils.histogram(fibers, "diameter_um", "Distribution des diamètres",
-                                  "Diamètre (µm)", color=COLORS["primary"])
-    hist_l = fig_utils.histogram(fibers, "length_um", "Distribution des longueurs",
-                                  "Longueur (µm)", color=COLORS["success"])
-    box_d = fig_utils.boxplot_by_group(fibers_with_material, "diameter_um", "material",
-                                        "Diamètres par matériau", "Diamètre (µm)")
-    box_l = fig_utils.boxplot_by_group(fibers_with_material, "length_um", "material",
-                                        "Longueurs par matériau", "Longueur (µm)")
-    contacts_by_material = (
-        fibers_with_material.groupby("material")["n_contacts"]
-        .mean().reset_index()
-        .rename(columns={"n_contacts": "mean_contacts"})
-    )
-    bar_contacts = fig_utils.bar_chart(
-        contacts_by_material, "material", "mean_contacts",
-        "Contacts moyens par fibre et par matériau",
-        color_col="material", xlabel="Matériau", ylabel="Contacts moyens / fibre",
-    )
-    return kpis, hist_d, hist_l, box_d, box_l, bar_contacts
+    box_d = fig_utils.boxplot_by_group(fibers_mat, "diameter_um", "material",
+                                        "Diamètre par matériau", "Diamètre (µm)")
+    box_l = fig_utils.boxplot_by_group(fibers_mat, "length_um", "material",
+                                        "Longueur par matériau", "Longueur (µm)")
+    return kpis, box_d, box_l
 
 
 @callback(
@@ -191,7 +176,7 @@ def update_overview(materials, batches):
     Input("ms-filter-material", "value"),
     Input("ms-filter-batch", "value"),
 )
-def update_pdf_distributions(materials, batches):
+def update_kde(materials, batches):
     filtered_samples = filter_samples(materials=materials or None, batches=batches or None)
     fibers = load_fibers()
     fibers = fibers[fibers["sample_id"].isin(filtered_samples["sample_id"])]
@@ -203,19 +188,15 @@ def update_pdf_distributions(materials, batches):
         empty = fig_utils.empty_figure("Aucune donnée")
         return empty, empty, empty
 
-    material_groups = sorted(fibers["material"].dropna().unique())
-
-    data_diameter = {m: fibers[fibers["material"] == m]["diameter_um"].dropna().values
-                     for m in material_groups}
-    data_psi = {m: fibers[fibers["material"] == m]["orientation_psi"].dropna().values
-                for m in material_groups}
-    data_theta = {m: fibers[fibers["material"] == m]["orientation_theta"].dropna().values
-                  for m in material_groups}
+    mats = sorted(fibers["material"].dropna().unique())
+    data_d = {m: fibers[fibers["material"] == m]["diameter_um"].dropna().values for m in mats}
+    data_p = {m: fibers[fibers["material"] == m]["orientation_psi"].dropna().values for m in mats}
+    data_t = {m: fibers[fibers["material"] == m]["orientation_theta"].dropna().values for m in mats}
 
     return (
-        fig_utils.pdf_overlay(data_diameter, xlabel="Diamètre (µm)"),
-        fig_utils.pdf_overlay(data_psi, xlabel="Angle azimutal ψ (°)"),
-        fig_utils.pdf_overlay(data_theta, xlabel="Angle zénithal θ (°)"),
+        fig_utils.pdf_overlay(data_d, xlabel="Diamètre (µm)"),
+        fig_utils.pdf_overlay(data_p, xlabel="Angle azimutal ψ (°)"),
+        fig_utils.pdf_overlay(data_t, xlabel="Angle zénithal θ (°)"),
     )
 
 
@@ -245,5 +226,3 @@ def update_pole_figure(materials, batches):
         color_col="material",
         size_col="length_um",
     )
-
-
