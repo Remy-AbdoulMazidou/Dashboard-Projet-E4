@@ -723,8 +723,11 @@ def _empty_fig(msg="Données non disponibles"):
 def _boxplot(df, y_col, y_title="", unit=""):
     """
     Boxplot par matériau.
-    Tooltip simplifié : valeur typique, plage habituelle, nombre de mesures.
-    Le nom du matériau n'est pas répété (il est déjà dans la boîte).
+    Le hover natif de go.Box est désactivé (hoverinfo='none') car Plotly génère
+    des événements séparés pour chaque élément (médiane, moustaches, etc.) qui
+    affichent des labels cryptiques comme 'carbone max', 'carbone median'...
+    On le remplace par des points invisibles positionnés aux valeurs clés de la
+    boîte, qui déclenchent un tooltip clair et unifié en français.
     """
     if df.empty or not _has(df, y_col, "material"):
         return _empty_fig(f"Colonne '{y_col}' non disponible dans les données")
@@ -741,19 +744,35 @@ def _boxplot(df, y_col, y_title="", unit=""):
         low_v  = max(vals.min(), q1_v - 1.5 * iqr_v)
         high_v = min(vals.max(), q3_v + 1.5 * iqr_v)
         n_v    = len(vals)
+
+        tooltip = (
+            f"<b>{mat}</b><br>"
+            f"Valeur typique : <b>{med_v:.2f}{u}</b><br>"
+            f"La moitié des fibres : {q1_v:.2f} – {q3_v:.2f}{u}<br>"
+            f"Plage habituelle : {low_v:.2f} – {high_v:.2f}{u}<br>"
+            f"Fibres mesurées : {n_v:,}"
+            "<extra></extra>"
+        )
+
+        # Boîte visible — hover natif supprimé
         fig.add_trace(go.Box(
             y=vals, name=mat,
             marker_color=mat_color(mat, i),
-            boxpoints="outliers",
-            line_width=1.8, marker_size=3,
-            hovertemplate=(
-                f"Valeur la plus courante : <b>{med_v:.2f}{u}</b><br>"
-                f"La majorité se situe entre {q1_v:.2f} et {q3_v:.2f}{u}<br>"
-                f"Valeurs habituelles : {low_v:.2f} – {high_v:.2f}{u}<br>"
-                f"Nombre de fibres mesurées : {n_v:,}"
-                "<extra></extra>"
-            ),
+            boxpoints=False,
+            line_width=1.8,
+            hoverinfo="none",
         ))
+
+        # Points invisibles aux niveaux clés → tooltip propre sur toute la hauteur
+        for y_pos in [low_v, q1_v, med_v, q3_v, high_v]:
+            fig.add_trace(go.Scatter(
+                x=[mat], y=[y_pos],
+                mode="markers",
+                showlegend=False,
+                marker=dict(size=14, opacity=0),
+                hovertemplate=tooltip,
+            ))
+
     fig.update_layout(**PLOT_LAYOUT, yaxis_title=y_title, showlegend=False)
     return apply_grid(fig)
 
