@@ -220,6 +220,42 @@ def _read_guide_block(text, accent):
 
 
 def graph_card(graph_id, title, description, read_guide, height="310px", col_width=6, accent="#2563EB"):
+    # Légende matériaux custom (cases à cocher) sous le graphique
+    legend_row = None
+    if MATERIALS:
+        items = []
+        for i, mat in enumerate(MATERIALS):
+            items.append(html.Div(
+                id={"type": "mat-g-cb", "graph": graph_id, "mat": mat},
+                n_clicks=0,
+                className="mat-cb-item mat-cb-item--on",
+                children=[
+                    html.Div(className="mat-cb-box", children=[
+                        html.Span("✕", className="mat-cb-x",
+                                  style={"color": mat_color(mat, i)}),
+                    ]),
+                    html.Span(mat, className="mat-cb-name"),
+                ],
+            ))
+        items.append(html.Div(className="mat-cb-separator"))
+        items.append(html.Div(
+            id={"type": "mat-g-all", "graph": graph_id},
+            n_clicks=0,
+            className="mat-cb-item mat-cb-item--on",
+            children=[
+                html.Div(className="mat-cb-box", children=[
+                    html.Span("✕", className="mat-cb-x",
+                              style={"color": "#0F172A"}),
+                ]),
+                html.Span("Tous les matériaux", className="mat-cb-name"),
+            ],
+        ))
+        legend_row = html.Div(items, className="mat-cb-row", style={
+            "marginTop": "10px",
+            "paddingTop": "10px",
+            "borderTop": "1px solid #E2E8F0",
+        })
+
     return dbc.Col(dbc.Card(style={
         "borderRadius": "12px",
         "border":       "1px solid #E2E8F0",
@@ -247,6 +283,7 @@ def graph_card(graph_id, title, description, read_guide, height="310px", col_wid
             }),
             _read_guide_block(read_guide, accent),
             dcc.Graph(id=graph_id, config=PLOT_CONFIG, style={"height": height}),
+            legend_row,
         ])
     ]), xs=12, md=col_width, className="mb-4")
 
@@ -462,38 +499,17 @@ app.layout = dbc.Container(fluid=True, style={
                     "display": "flex", "gap": "16px",
                     "alignItems": "flex-end", "flexWrap": "wrap",
                 }, children=[
-                    html.Div(style={"flex": "3 1 320px"}, children=[
-                        html.Label("Matériaux visibles", style={
+                    html.Div(style={"flex": "2 1 180px"}, children=[
+                        html.Label("Matériau", style={
                             "fontWeight": 700, "fontSize": "12px",
-                            "color": "#334155", "marginBottom": "8px", "display": "block",
+                            "color": "#334155", "marginBottom": "5px", "display": "block",
                         }),
-                        html.Div([
-                            *[html.Div(
-                                id={"type": "mat-cb", "index": mat},
-                                n_clicks=0,
-                                className="mat-cb-item mat-cb-item--on",
-                                children=[
-                                    html.Div(className="mat-cb-box", children=[
-                                        html.Span("✕", className="mat-cb-x",
-                                                  style={"color": mat_color(mat, i)}),
-                                    ]),
-                                    html.Span(mat, className="mat-cb-name"),
-                                ]
-                            ) for i, mat in enumerate(MATERIALS)],
-                            html.Div(className="mat-cb-separator"),
-                            html.Div(
-                                id="mat-cb-all",
-                                n_clicks=0,
-                                className="mat-cb-item mat-cb-item--on",
-                                children=[
-                                    html.Div(className="mat-cb-box", children=[
-                                        html.Span("✕", className="mat-cb-x",
-                                                  style={"color": "#0F172A"}),
-                                    ]),
-                                    html.Span("Tous les matériaux", className="mat-cb-name"),
-                                ]
-                            ),
-                        ], className="mat-cb-row"),
+                        dcc.Dropdown(
+                            id="filter-material",
+                            options=[{"label": m, "value": m} for m in MATERIALS],
+                            multi=True, placeholder="Tous les matériaux",
+                            style={"fontSize": "13px"},
+                        ),
                     ]),
                     html.Div(style={"flex": "2 1 180px"}, children=[
                         html.Label("Lot de fabrication", style={
@@ -593,7 +609,7 @@ app.layout = dbc.Container(fluid=True, style={
                                     "0° = fibres à plat, 90° = fibres verticales.",
                                     "Un pic = beaucoup de fibres dans la même direction. "
                                     "Courbe plate = fibres dans toutes les directions. "
-                                    "Clic légende = afficher un matériau, double-clic = l'isoler.",
+                                    "Utilisez les cases ci-dessous pour afficher ou masquer un matériau.",
                                     accent=TABS["morphology"]["bg"],
                                 ),
                                 graph_card(
@@ -633,7 +649,7 @@ app.layout = dbc.Container(fluid=True, style={
                                     "La plupart sont petites, quelques-unes peuvent être très grandes.",
                                     "Les barres à gauche = contacts petits (les plus fréquents). "
                                     "Les barres à droite = contacts plus rares mais plus grands. "
-                                    "Clic légende = afficher un matériau, double-clic = l'isoler.",
+                                    "Utilisez les cases ci-dessous pour afficher ou masquer un matériau.",
                                     accent=TABS["contacts"]["bg"],
                                 ),
                                 graph_card(
@@ -682,7 +698,7 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Une résistance intermédiaire est idéale pour l'absorption acoustique.",
                                     "Chaque point = un échantillon. En bas = résistance faible (laisse passer l'air). "
                                     "En haut = résistance forte (bloque l'air). "
-                                    "Clic légende = afficher un matériau, double-clic = l'isoler.",
+                                    "Utilisez les cases ci-dessous pour afficher ou masquer un matériau.",
                                     height="310px", col_width=6,
                                     accent=TABS["acoustics"]["bg"],
                                 ),
@@ -693,8 +709,7 @@ app.layout = dbc.Container(fluid=True, style={
                                     "sur l'ensemble du spectre. Permet de voir en un coup d'œil "
                                     "quel matériau absorbe le mieux le son.",
                                     "La courbe la plus haute = le meilleur absorbant. "
-                                    "Clic sur une courbe dans la légende = afficher/masquer ce matériau. "
-                                    "Double-clic = afficher ce matériau seul.",
+                                    "Utilisez les cases ci-dessous pour afficher ou masquer un matériau.",
                                     height="310px", col_width=6,
                                     accent=TABS["acoustics"]["bg"],
                                 ),
@@ -859,7 +874,6 @@ def update_all(vis_mats, bat_sel):
                 marker_color=mat_color(mat, i),
                 marker_line=dict(color="white", width=0.8),
                 opacity=0.55, nbinsx=20, histnorm="percent",
-                visible=True if i == 0 else "legendonly",
                 hovertemplate=f"<b>{mat}</b><br>Angle = %{{x:.0f}}°<br>%{{y:.1f}} % des fibres<extra></extra>",
             ))
         fig_ori.update_layout(
@@ -867,7 +881,7 @@ def update_all(vis_mats, bat_sel):
             barmode="overlay",
             xaxis_title="Angle θ (degrés)",
             yaxis_title="% des fibres",
-            legend=_legend_h(),
+            showlegend=False,
         )
         apply_grid(fig_ori)
     else:
@@ -894,7 +908,6 @@ def update_all(vis_mats, bat_sel):
                 marker_color=mat_color(mat, i),
                 marker_line=dict(color="white", width=0.8),
                 opacity=0.55, nbinsx=30, histnorm="percent",
-                visible=True if i == 0 else "legendonly",
                 hovertemplate=f"<b>{mat}</b><br>Aire = %{{x:.0f}} µm²<br>%{{y:.1f}} % des contacts<extra></extra>",
             ))
         fig_ca.update_layout(
@@ -902,7 +915,7 @@ def update_all(vis_mats, bat_sel):
             barmode="overlay",
             xaxis_title="Aire de contact (µm²)",
             yaxis_title="% des contacts",
-            legend=_legend_h(),
+            showlegend=False,
         )
         apply_grid(fig_ca)
     else:
@@ -919,7 +932,6 @@ def update_all(vis_mats, bat_sel):
                 marker=dict(color=mat_color(mat, i), size=12,
                             line=dict(width=1.5, color="white")),
                 text=grp.get("sample_id"),
-                visible=True if i == 0 else "legendonly",
                 hovertemplate=(
                     "<b>Échantillon %{text}</b><br>"
                     "Porosité : %{x:.3f}<br>"
@@ -931,7 +943,7 @@ def update_all(vis_mats, bat_sel):
             **PLOT_LAYOUT,
             xaxis_title="Porosité (proportion de vide)",
             yaxis_title="Contacts par mm³",
-            legend=_legend_h(),
+            showlegend=False,
         )
         apply_grid(fig_dp)
     else:
@@ -950,7 +962,6 @@ def update_all(vis_mats, bat_sel):
                 marker=dict(color=mat_color(mat, i), size=12,
                             line=dict(width=1.5, color="white")),
                 text=grp.get("sample_id"),
-                visible=True if i == 0 else "legendonly",
                 hovertemplate=(
                     "<b>Échantillon %{text}</b><br>"
                     "Porosité : %{x:.3f}<br>"
@@ -975,7 +986,7 @@ def update_all(vis_mats, bat_sel):
             xaxis_title="Porosité (proportion de vide)",
             yaxis_title="Résistivité σ (Pa·s/m²)",
             yaxis_type="log",
-            legend=_legend_h(),
+            showlegend=False,
         )
         apply_grid(fig_res)
     else:
@@ -1011,7 +1022,7 @@ def update_all(vis_mats, bat_sel):
                 **{k: v for k, v in AXIS_STYLE.items() if k != "title_font"},
                 title_font=AXIS_STYLE["title_font"],
             ),
-            legend=_legend_v(),
+            showlegend=False,
         )
     else:
         fig_ranking = _empty_fig("Données d'absorption insuffisantes pour comparer les matériaux")
@@ -1168,59 +1179,74 @@ def update_absorption_graph(selected_ids, store_data):
     return fig
 
 
-# ─── Callbacks : cases à cocher matériaux ────────────────────────────────────
-
+# ─── Callback : dropdown matériau → mat-vis-store ────────────────────────────
 @app.callback(
     Output("mat-vis-store", "data"),
-    Input({"type": "mat-cb", "index": ALL}, "n_clicks"),
-    Input("mat-cb-all", "n_clicks"),
+    Input("filter-material", "value"),
+    prevent_initial_call=True,
+)
+def material_dropdown_to_store(mat_sel):
+    if not mat_sel:
+        return list(MATERIALS)
+    return list(mat_sel)
+
+
+# ─── Callback : cases matériaux dans les graphiques ──────────────────────────
+@app.callback(
+    Output("mat-vis-store", "data", allow_duplicate=True),
+    Input({"type": "mat-g-cb",  "graph": ALL, "mat": ALL}, "n_clicks"),
+    Input({"type": "mat-g-all", "graph": ALL},              "n_clicks"),
     State("mat-vis-store", "data"),
     prevent_initial_call=True,
 )
-def toggle_material_vis(mat_clicks, all_n, current):
+def toggle_material_vis_graph(mat_clicks, all_clicks, current):
     triggered = ctx.triggered_id
     vis = list(current or [])
-    if triggered == "mat-cb-all":
-        if set(vis) == set(MATERIALS):
-            return []
-        return list(MATERIALS)
-    if isinstance(triggered, dict) and triggered.get("type") == "mat-cb":
-        mat = triggered["index"]
-        if mat in vis:
-            vis.remove(mat)
-        else:
-            vis.append(mat)
-        return vis
+    if isinstance(triggered, dict):
+        if triggered.get("type") == "mat-g-cb":
+            mat = triggered["mat"]
+            if mat in vis:
+                vis.remove(mat)
+            else:
+                vis.append(mat)
+            return vis
+        if triggered.get("type") == "mat-g-all":
+            if set(vis) == set(MATERIALS):
+                return []
+            return list(MATERIALS)
     return vis
 
 
+# ─── Callback : sync classes des cases dans les graphiques ───────────────────
 @app.callback(
-    Output({"type": "mat-cb", "index": ALL}, "className"),
-    Output("mat-cb-all", "className"),
+    Output({"type": "mat-g-cb",  "graph": ALL, "mat": ALL}, "className"),
+    Output({"type": "mat-g-all", "graph": ALL},              "className"),
     Input("mat-vis-store", "data"),
 )
-def sync_mat_cb_classes(vis_data):
+def sync_graph_legend_classes(vis_data):
     vis = set(vis_data or [])
     mat_classes = [
-        "mat-cb-item mat-cb-item--on" if mat in vis else "mat-cb-item mat-cb-item--off"
-        for mat in MATERIALS
+        "mat-cb-item mat-cb-item--on" if spec["id"]["mat"] in vis
+        else "mat-cb-item mat-cb-item--off"
+        for spec in ctx.outputs_list[0]
     ]
     all_class = (
         "mat-cb-item mat-cb-item--on" if vis == set(MATERIALS)
         else "mat-cb-item mat-cb-item--off"
     )
-    return mat_classes, all_class
+    return mat_classes, [all_class] * len(ctx.outputs_list[1])
 
 
 # ─── Reset filtres ────────────────────────────────────────────────────────────
 @app.callback(
-    Output("mat-vis-store", "data", allow_duplicate=True),
-    Output("filter-batch",  "value"),
+    Output("mat-vis-store",   "data",  allow_duplicate=True),
+    Output("filter-batch",    "value"),
+    Output("filter-material", "value"),
     Input("btn-reset", "n_clicks"),
     prevent_initial_call=True,
 )
 def reset_filters(_):
-    return list(MATERIALS), None
+    return list(MATERIALS), None, None
 
 
 if __name__ == "__main__":
