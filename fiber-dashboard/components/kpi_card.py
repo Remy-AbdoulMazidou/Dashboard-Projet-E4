@@ -22,4 +22,4 @@ def kpi_card(icon: str, value: str, label: str, delta: str = None,
             )
         )
 
-    return html.Div(children, className="kpi-card")
+    return html.Div(children, className="kpi-card", style={"--kpi-color": accent})

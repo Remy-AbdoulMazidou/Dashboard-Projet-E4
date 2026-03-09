@@ -6,6 +6,7 @@ NAV_ITEMS = [
     ("/microstructure","🔬", "Microstructure"),
     ("/properties",    "🔊", "Propriétés"),
     ("/algorithm",     "⚙️",  "Algorithme"),
+    ("/quality",       "🔍", "Contrôle qualité"),
 ]
 
 

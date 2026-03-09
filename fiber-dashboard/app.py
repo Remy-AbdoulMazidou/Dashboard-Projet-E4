@@ -33,6 +33,7 @@ app = dash.Dash(
 # Two-shell layout: home (full-screen) vs dashboard (with sidebar)
 app.layout = html.Div([
     dcc.Location(id="url", refresh=False),
+    html.Div(id="_nav_active", style={"display": "none"}),
 
     # Full-screen home shell (shown only on /)
     html.Div(id="home-shell"),
@@ -88,6 +89,27 @@ def render_page(pathname):
     page_fn = ROUTES.get(pathname, overview.layout)
     return page_fn()
 
+
+app.clientside_callback(
+    """
+    function(pathname) {
+        document.querySelectorAll('.nav-link').forEach(function(el) {
+            el.classList.remove('active');
+        });
+        if (pathname && pathname !== '/') {
+            var links = document.querySelectorAll('.nav-link');
+            links.forEach(function(el) {
+                if (el.getAttribute('href') === pathname) {
+                    el.classList.add('active');
+                }
+            });
+        }
+        return '';
+    }
+    """,
+    Output("_nav_active", "children"),
+    Input("url", "pathname"),
+)
 
 server = app.server
 

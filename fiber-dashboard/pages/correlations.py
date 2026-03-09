@@ -60,12 +60,6 @@ def layout() -> html.Div:
             ], className="card col-12"),
         ], className="row"),
 
-        guide_box("Comment utiliser cette matrice ?", [
-            "Cherchez les descripteurs microstructuraux fortement corrélés aux propriétés acoustiques (absorption_*) ou thermiques.",
-            "Une corrélation > 0,7 ou < −0,7 est généralement considérée comme forte.",
-            "La diagonale vaut toujours 1 (une variable est parfaitement corrélée avec elle-même).",
-            "Ignorez les corrélations entre descripteurs similaires (ex. mean_length et std_length).",
-        ]),
 
         # ── Section 2 : Scatter interactif ──────────────────────────────────
         html.H3("Scatter plot interactif", className="section-separator"),
@@ -131,12 +125,6 @@ def layout() -> html.Div:
             ], className="card col-4"),
         ], className="row"),
 
-        guide_box("Interpréter le R² de la régression", [
-            "R² = 1,0 → la droite explique 100 % de la variance (relation parfaite).",
-            "R² > 0,7 → bonne prédictabilité linéaire entre les deux variables.",
-            "R² < 0,3 → relation faible ou non-linéaire — envisager d'autres modèles.",
-            "R² proche de 0 → aucune relation linéaire détectable.",
-        ]),
 
         # ── Section 3 : Expérimental vs Prédit ──────────────────────────────
         html.H3("Validation du modèle — Expérimental vs Prédit", className="section-separator"),

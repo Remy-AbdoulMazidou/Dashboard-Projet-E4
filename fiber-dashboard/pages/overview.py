@@ -54,22 +54,6 @@ def layout() -> html.Div:
             ], className="card col-6"),
         ], className="row"),
 
-        guide_box("Comment lire ces graphiques ?", [
-            "Barres : hauteur = nombre total de fibres. Comparez entre matériaux pour identifier les différences de densité.",
-            "Camembert : chaque portion = proportion d'échantillons dans cet état. Un taux élevé d'erreurs signale un problème de traitement.",
-        ]),
-
-        # Timeline
-        html.Div([
-            html.Div([
-                chart_header(
-                    "Avancement des traitements dans le temps",
-                    "Montre le nombre d'échantillons traités par date. Utile pour suivre la progression des expériences en cours.",
-                ),
-                dcc.Graph(id="ov-timeline"),
-            ], className="card col-12"),
-        ], className="row"),
-
         # Table
         html.Div([
             html.Div([
@@ -89,7 +73,6 @@ def layout() -> html.Div:
     Output("ov-kpi-row", "children"),
     Output("ov-bar-material", "figure"),
     Output("ov-pie-status", "figure"),
-    Output("ov-timeline", "figure"),
     Output("ov-table", "children"),
     Input("ov-filter-material", "value"),
     Input("ov-filter-batch", "value"),
@@ -138,20 +121,6 @@ def update_overview(materials, batches, statuses):
         title="Répartition des statuts",
     )
 
-    if not df.empty and "processing_date" in df.columns:
-        timeline_df = df.dropna(subset=["processing_date"]).copy()
-        timeline_df["processing_date"] = pd.to_datetime(timeline_df["processing_date"])
-        timeline_df = timeline_df.sort_values("processing_date")
-        daily = timeline_df.groupby(["processing_date", "status"]).size().reset_index(name="count")
-        timeline = fig_utils.bar_chart(
-            daily, "processing_date", "count",
-            "Avancement des traitements par date",
-            color_col="status",
-            xlabel="Date", ylabel="Échantillons traités",
-        )
-    else:
-        timeline = fig_utils.empty_figure("Pas de données de date disponibles")
-
     table_cols = ["sample_id", "material", "batch", "fiber_count", "porosity",
                   "mean_diameter_um", "quality_score", "status"]
     table_data = df[table_cols].to_dict("records")
@@ -164,4 +133,4 @@ def update_overview(materials, batches, statuses):
         **TABLE_STYLE,
     )
 
-    return kpis, bar_mat, pie_status, timeline, table
+    return kpis, bar_mat, pie_status, table

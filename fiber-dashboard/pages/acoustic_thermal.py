@@ -98,13 +98,6 @@ def layout() -> html.Div:
             ], className="card col-6"),
         ], className="row"),
 
-        guide_box("Comment lire la matrice de corrélation ?", [
-            "Chaque cellule indique la corrélation r entre deux variables (valeur entre −1 et +1).",
-            "r proche de +1 → les deux variables augmentent ensemble (corrélation positive forte).",
-            "r proche de −1 → quand l'une augmente, l'autre diminue (corrélation négative forte).",
-            "r proche de 0 → pas de relation linéaire entre les deux variables.",
-            "Concentrez-vous sur les cellules aux couleurs les plus intenses.",
-        ]),
 
         # ── Section 2 : Paramètres de transport ──────────────────────────────
         html.H3("Paramètres de transport vs porosité — modèle JCA", className="section-separator"),
@@ -114,11 +107,6 @@ def layout() -> html.Div:
             "comment chaque paramètre évolue avec la porosité, en distinguant les orientations des fibres. "
             "Les lignes en pointillés sont les droites de régression linéaire par catégorie d'orientation."
         ),
-        guide_box("Catégories d'orientation des fibres", [
-            "Anisotrope (<20°) — fibres fortement alignées dans une direction préférentielle.",
-            "Modéré (20–40°) — alignement partiel, cas intermédiaire.",
-            "Quasi-isotrope (>40°) — fibres orientées de façon aléatoire, réseau homogène.",
-        ]),
         html.Div([
             html.Div([dcc.Graph(id="at-transport-subplot")], className="card col-12"),
         ], className="row"),
@@ -130,12 +118,6 @@ def layout() -> html.Div:
             "de la fréquence (250 Hz à 4000 Hz). Chaque ligne représente un échantillon. "
             "Sélectionnez jusqu'à 6 échantillons pour les comparer côte à côte."
         ),
-        guide_box("Comment interpréter les courbes d'absorption ?", [
-            "Un pic dans la courbe indique la fréquence d'absorption optimale du matériau.",
-            "Une courbe plate et élevée = matériau performant sur une large plage de fréquences.",
-            "Les basses fréquences (<500 Hz) sont difficiles à absorber pour les matériaux fins.",
-            "La résistivité à l'écoulement (graphique de droite) est le paramètre le plus prédictif de l'absorption.",
-        ]),
         html.Div([
             html.Div([
                 html.Div([

@@ -1,6 +1,7 @@
 from dash import html, dcc, callback, Input, Output, dash_table
 
 from components.kpi_card import kpi_card
+from components.info_box import info_box, guide_box, chart_header
 from utils.data_loader import load_quality_log
 from utils import figures as fig_utils
 from config import COLORS, TABLE_STYLE
@@ -19,20 +20,64 @@ SEVERITY_OPTIONS = ["low", "medium", "high"]
 def layout() -> html.Div:
     return html.Div([
         html.H2("Contrôle qualité", className="page-title"),
+        html.P(
+            "Suivi des anomalies détectées lors de l'acquisition et du traitement des images µ-CT : "
+            "artefacts, bruit excessif, faible contraste, erreurs de segmentation.",
+            className="page-subtitle",
+        ),
+
+        info_box(
+            "Chaque scan µ-CT fait l'objet d'un contrôle qualité automatique et/ou manuel. "
+            "Les issues identifiées sont classées par type et sévérité. "
+            "Un taux de résolution élevé (> 80 %) et un faible pourcentage d'issues de sévérité haute "
+            "indiquent une chaîne d'acquisition fiable. "
+            "Les issues non résolues doivent être examinées avant toute interprétation des résultats."
+        ),
 
         html.Div(id="qc-kpi-row", className="kpi-row"),
 
+        guide_box("Comment lire ces graphiques ?", [
+            "Barres (types d'issues) : chaque barre = nombre d'occurrences d'un type d'anomalie. "
+            "Un pic sur 'artifact' ou 'noise' signale un problème d'acquisition récurrent.",
+            "Camembert (détection) : ratio détection automatique / manuelle. "
+            "Un taux auto élevé (> 70 %) valide la robustesse du pipeline de contrôle.",
+            "Barres par échantillon : identifie les scans les plus problématiques. "
+            "Priorisez la vérification des échantillons avec le plus d'issues.",
+        ]),
+
         html.Div(
             [
-                html.Div([dcc.Graph(id="qc-bar-issue-type")], className="card col-6"),
-                html.Div([dcc.Graph(id="qc-pie-detection")], className="card col-6"),
+                html.Div([
+                    chart_header(
+                        "Nombre d'issues par type",
+                        "Identifie les types d'anomalies les plus fréquents dans la base de données. "
+                        "Les types 'artifact' et 'noise' sont liés à l'acquisition ; "
+                        "'segmentation_error' signale un problème algorithmique.",
+                    ),
+                    dcc.Graph(id="qc-bar-issue-type"),
+                ], className="card col-6"),
+                html.Div([
+                    chart_header(
+                        "Détection automatique vs manuelle",
+                        "Montre quelle proportion des issues est détectée par le pipeline automatique "
+                        "versus une inspection humaine. Un taux auto élevé réduit la charge de travail.",
+                    ),
+                    dcc.Graph(id="qc-pie-detection"),
+                ], className="card col-6"),
             ],
             className="row",
         ),
 
         html.Div(
             [
-                html.Div([dcc.Graph(id="qc-bar-by-sample")], className="card col-12"),
+                html.Div([
+                    chart_header(
+                        "Issues par échantillon (top 30)",
+                        "Repère les échantillons concentrant le plus d'anomalies. "
+                        "Un échantillon avec de nombreuses issues doit être retraité ou écarté de l'analyse.",
+                    ),
+                    dcc.Graph(id="qc-bar-by-sample"),
+                ], className="card col-12"),
             ],
             className="row",
         ),

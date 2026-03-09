@@ -342,10 +342,8 @@ def generate_quality_log(samples_df):
 
 
 def main():
-    print("Generating samples.csv...")
+    print("Generating samples (base)...")
     samples = generate_samples()
-    samples.to_csv(os.path.join(DATA_DIR, "samples.csv"), index=False)
-    print(f"  → {len(samples)} samples")
 
     print("Generating fibers.csv...")
     fibers = generate_fibers(samples)
@@ -356,6 +354,18 @@ def main():
     contacts = generate_contacts(fibers)
     contacts.to_csv(os.path.join(DATA_DIR, "contacts.csv"), index=False)
     print(f"  → {len(contacts)} contacts")
+
+    # Backfill samples with actual counts from generated data
+    fiber_counts = fibers.groupby("sample_id").size().to_dict()
+    contact_counts = contacts.groupby("sample_id").size().to_dict()
+    samples = samples.copy()
+    samples.loc[:, "fiber_count"] = samples["sample_id"].map(lambda x: fiber_counts.get(x, 0))
+    samples.loc[:, "contact_count"] = samples["sample_id"].map(lambda x: contact_counts.get(x, 0))
+    samples.loc[:, "contact_density"] = (samples["contact_count"] / samples["volume_mm3"]).round(2)
+
+    print("Generating samples.csv (with corrected counts)...")
+    samples.to_csv(os.path.join(DATA_DIR, "samples.csv"), index=False)
+    print(f"  → {len(samples)} samples")
 
     print("Generating parameter_sweep.csv...")
     sweep = generate_parameter_sweep(samples)

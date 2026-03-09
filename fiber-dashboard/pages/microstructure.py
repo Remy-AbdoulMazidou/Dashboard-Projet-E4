@@ -1,17 +1,14 @@
 from dash import html, dcc, callback, Input, Output
 
-from components.filters import material_filter, batch_filter, filter_bar, sample_selector
+from components.filters import material_filter, batch_filter, filter_bar
 from components.kpi_card import kpi_card
 from components.info_box import info_box, guide_box, warn_box, chart_header
-from utils.data_loader import load_fibers, load_samples, filter_samples
+from utils.data_loader import load_fibers, filter_samples
 from utils import figures as fig_utils
 from config import COLORS
 
 
 def layout() -> html.Div:
-    samples = load_samples()
-    all_ids = samples["sample_id"].tolist()
-
     return html.Div([
         html.H2("Descripteurs microstructuraux", className="page-title"),
         html.P(
@@ -69,13 +66,6 @@ def layout() -> html.Div:
                 dcc.Graph(id="ms-box-length"),
             ], className="card col-6"),
         ], className="row"),
-
-        guide_box("Comment lire les boîtes à moustaches ?", [
-            "Trait central = valeur médiane (50 % des fibres sont en dessous).",
-            "Boîte colorée = 25e–75e percentile (là où se trouvent 50 % des fibres).",
-            "Moustaches = étendue totale hors valeurs aberrantes.",
-            "Plus la boîte est étroite, plus les fibres sont homogènes en taille.",
-        ]),
 
         html.Div([
             html.Div([
@@ -136,28 +126,6 @@ def layout() -> html.Div:
             html.Div([
                 dcc.Graph(id="ms-pole-figure"),
             ], className="card col-12"),
-        ], className="row"),
-
-        # ── Section 4 : Histogramme + KDE par échantillon ───────────────────
-        html.H3("Histogramme + KDE par échantillon", className="section-separator"),
-        info_box(
-            "Sélectionnez un échantillon pour voir la distribution détaillée de ses fibres. "
-            "Les barres grises = données brutes (histogramme normalisé). "
-            "La courbe bleue = modèle KDE lissé. "
-            "La ligne pointillée = valeur moyenne."
-        ),
-        html.Div([
-            sample_selector("ms-sample-select", all_ids),
-        ], className="filter-bar"),
-        html.Div([
-            html.Div([
-                chart_header("Diamètre — histogramme + KDE", "Distribution fine pour l'échantillon sélectionné."),
-                dcc.Graph(id="ms-hkde-diameter"),
-            ], className="card col-6"),
-            html.Div([
-                chart_header("Angle θ — histogramme + KDE", "Profil d'orientation zénithale pour cet échantillon."),
-                dcc.Graph(id="ms-hkde-theta"),
-            ], className="card col-6"),
         ], className="row"),
 
     ], className="page-content")
@@ -279,24 +247,3 @@ def update_pole_figure(materials, batches):
     )
 
 
-@callback(
-    Output("ms-hkde-diameter", "figure"),
-    Output("ms-hkde-theta", "figure"),
-    Input("ms-sample-select", "value"),
-)
-def update_hist_kde(sample_id):
-    if not sample_id:
-        empty = fig_utils.empty_figure("Sélectionnez un échantillon")
-        return empty, empty
-
-    fibers = load_fibers()
-    sub = fibers[fibers["sample_id"] == sample_id]
-
-    if sub.empty:
-        empty = fig_utils.empty_figure("Aucune fibre pour cet échantillon")
-        return empty, empty
-
-    return (
-        fig_utils.hist_kde_overlay(sub["diameter_um"].values, xlabel="Diamètre (µm)", color="#2E86AB"),
-        fig_utils.hist_kde_overlay(sub["orientation_theta"].values, xlabel="Angle zénithal θ (°)", color="#2A9D8F"),
-    )
