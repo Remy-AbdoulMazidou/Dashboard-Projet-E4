@@ -29,7 +29,7 @@ explicatif plutôt que de faire planter l'application.
 
 import os
 import dash
-from dash import dcc, html, Input, Output, State, ctx
+from dash import dcc, html, Input, Output, State, ctx, ALL
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import pandas as pd
@@ -137,12 +137,7 @@ AXIS_STYLE = dict(
     tickfont=dict(size=11, color="#334155"),
 )
 
-# Légende avec instructions claires
 LEGEND_STYLE = dict(
-    title=dict(
-        text="Clic = afficher/masquer  |  Double-clic = isoler un seul",
-        font=dict(size=10, color="#64748B"),
-    ),
     bgcolor="rgba(248,250,252,0.95)",
     bordercolor="#CBD5E1",
     borderwidth=1,
@@ -239,13 +234,15 @@ def graph_card(graph_id, title, description, read_guide, height="310px", col_wid
                     "margin": "0 auto 8px auto",
                 }),
                 html.H6(title, style={
-                    "fontWeight": 700, "color": "#0F172A",
-                    "fontSize": "13.5px", "marginBottom": "0",
+                    "fontWeight": 800, "color": "#0F172A",
+                    "fontSize": "15px", "marginBottom": "0",
+                    "letterSpacing": "-0.02em",
                 }),
             ]),
             html.P(description, style={
-                "fontSize": "12px", "color": "#64748B",
-                "lineHeight": "1.6", "marginBottom": "8px",
+                "fontSize": "13px", "color": "#334155",
+                "fontWeight": "500",
+                "lineHeight": "1.65", "marginBottom": "10px",
                 "textAlign": "center",
             }),
             _read_guide_block(read_guide, accent),
@@ -296,15 +293,17 @@ def _absorption_card():
                     "margin": "0 auto 8px auto",
                 }),
                 html.H6("Coefficient d'absorption acoustique par fréquence", style={
-                    "fontWeight": 700, "color": "#0F172A",
-                    "fontSize": "13.5px", "marginBottom": "0",
+                    "fontWeight": 800, "color": "#0F172A",
+                    "fontSize": "15px", "marginBottom": "0",
+                    "letterSpacing": "-0.02em",
                 }),
             ]),
             html.P(
                 "Chaque courbe montre comment un échantillon absorbe le son selon la fréquence. "
                 "Plus la courbe est haute, meilleure est l'absorption.",
-                style={"fontSize": "12px", "color": "#64748B",
-                       "lineHeight": "1.6", "marginBottom": "8px", "textAlign": "center"},
+                style={"fontSize": "13px", "color": "#334155",
+                       "fontWeight": "500",
+                       "lineHeight": "1.65", "marginBottom": "10px", "textAlign": "center"},
             ),
             _read_guide_block(
                 "Choisissez un ou plusieurs échantillons dans la liste à droite. "
@@ -402,6 +401,7 @@ app.layout = dbc.Container(fluid=True, style={
 }, children=[
 
     dcc.Store(id="acou-data-store"),
+    dcc.Store(id="mat-vis-store", data=list(MATERIALS)),
 
     # ── HEADER ──────────────────────────────────────────────────────────────
     html.Div(style={
@@ -462,17 +462,38 @@ app.layout = dbc.Container(fluid=True, style={
                     "display": "flex", "gap": "16px",
                     "alignItems": "flex-end", "flexWrap": "wrap",
                 }, children=[
-                    html.Div(style={"flex": "2 1 180px"}, children=[
-                        html.Label("Matériau", style={
+                    html.Div(style={"flex": "3 1 320px"}, children=[
+                        html.Label("Matériaux visibles", style={
                             "fontWeight": 700, "fontSize": "12px",
-                            "color": "#334155", "marginBottom": "5px", "display": "block",
+                            "color": "#334155", "marginBottom": "8px", "display": "block",
                         }),
-                        dcc.Dropdown(
-                            id="filter-material",
-                            options=[{"label": m, "value": m} for m in MATERIALS],
-                            multi=True, placeholder="Tous les matériaux",
-                            style={"fontSize": "13px"},
-                        ),
+                        html.Div([
+                            *[html.Div(
+                                id={"type": "mat-cb", "index": mat},
+                                n_clicks=0,
+                                className="mat-cb-item mat-cb-item--on",
+                                children=[
+                                    html.Div(className="mat-cb-box", children=[
+                                        html.Span("✕", className="mat-cb-x",
+                                                  style={"color": mat_color(mat, i)}),
+                                    ]),
+                                    html.Span(mat, className="mat-cb-name"),
+                                ]
+                            ) for i, mat in enumerate(MATERIALS)],
+                            html.Div(className="mat-cb-separator"),
+                            html.Div(
+                                id="mat-cb-all",
+                                n_clicks=0,
+                                className="mat-cb-item mat-cb-item--on",
+                                children=[
+                                    html.Div(className="mat-cb-box", children=[
+                                        html.Span("✕", className="mat-cb-x",
+                                                  style={"color": "#0F172A"}),
+                                    ]),
+                                    html.Span("Tous les matériaux", className="mat-cb-name"),
+                                ]
+                            ),
+                        ], className="mat-cb-row"),
                     ]),
                     html.Div(style={"flex": "2 1 180px"}, children=[
                         html.Label("Lot de fabrication", style={
@@ -700,7 +721,7 @@ def _filter(mat_sel, bat_sel):
     if samples.empty:
         return [], pd.DataFrame()
     mask = pd.Series([True] * len(samples))
-    if mat_sel:
+    if mat_sel is not None:   # None = pas de filtre ; [] = afficher rien
         mask &= samples["material"].isin(mat_sel)
     if bat_sel:
         mask &= samples["batch"].isin(bat_sel)
@@ -789,11 +810,11 @@ def _boxplot(df, y_col, y_title="", unit=""):
     Output("graph-resistivity",      "figure"),
     Output("graph-absorption-ranking", "figure"),
     Output("acou-data-store",        "data"),
-    Input("filter-material", "value"),
-    Input("filter-batch",    "value"),
+    Input("mat-vis-store", "data"),
+    Input("filter-batch",  "value"),
 )
-def update_all(mat_sel, bat_sel):
-    ids, samp_f = _filter(mat_sel, bat_sel)
+def update_all(vis_mats, bat_sel):
+    ids, samp_f = _filter(vis_mats, bat_sel)
 
     def sub(df):
         if df.empty or "sample_id" not in df.columns:
@@ -1079,13 +1100,8 @@ def update_absorption_graph(selected_ids, store_data):
     if not records:
         return _empty_fig("Données d'absorption acoustique non disponibles")
 
-    # Auto-sélectionner le premier échantillon si rien n'est sélectionné
     if not selected_ids:
-        all_ids = [str(r["sample_id"]) for r in records]
-        if all_ids:
-            selected_ids = [all_ids[0]]
-        else:
-            return _empty_fig("Sélectionnez au moins un échantillon dans la liste à droite →")
+        return _empty_fig("Sélectionnez au moins un échantillon dans la liste à droite →")
 
     mats_idx = {}
     for rec in records:
@@ -1152,15 +1168,59 @@ def update_absorption_graph(selected_ids, store_data):
     return fig
 
 
+# ─── Callbacks : cases à cocher matériaux ────────────────────────────────────
+
+@app.callback(
+    Output("mat-vis-store", "data"),
+    Input({"type": "mat-cb", "index": ALL}, "n_clicks"),
+    Input("mat-cb-all", "n_clicks"),
+    State("mat-vis-store", "data"),
+    prevent_initial_call=True,
+)
+def toggle_material_vis(mat_clicks, all_n, current):
+    triggered = ctx.triggered_id
+    vis = list(current or [])
+    if triggered == "mat-cb-all":
+        if set(vis) == set(MATERIALS):
+            return []
+        return list(MATERIALS)
+    if isinstance(triggered, dict) and triggered.get("type") == "mat-cb":
+        mat = triggered["index"]
+        if mat in vis:
+            vis.remove(mat)
+        else:
+            vis.append(mat)
+        return vis
+    return vis
+
+
+@app.callback(
+    Output({"type": "mat-cb", "index": ALL}, "className"),
+    Output("mat-cb-all", "className"),
+    Input("mat-vis-store", "data"),
+)
+def sync_mat_cb_classes(vis_data):
+    vis = set(vis_data or [])
+    mat_classes = [
+        "mat-cb-item mat-cb-item--on" if mat in vis else "mat-cb-item mat-cb-item--off"
+        for mat in MATERIALS
+    ]
+    all_class = (
+        "mat-cb-item mat-cb-item--on" if vis == set(MATERIALS)
+        else "mat-cb-item mat-cb-item--off"
+    )
+    return mat_classes, all_class
+
+
 # ─── Reset filtres ────────────────────────────────────────────────────────────
 @app.callback(
-    Output("filter-material", "value"),
-    Output("filter-batch",    "value"),
+    Output("mat-vis-store", "data", allow_duplicate=True),
+    Output("filter-batch",  "value"),
     Input("btn-reset", "n_clicks"),
     prevent_initial_call=True,
 )
 def reset_filters(_):
-    return None, None
+    return list(MATERIALS), None
 
 
 if __name__ == "__main__":
