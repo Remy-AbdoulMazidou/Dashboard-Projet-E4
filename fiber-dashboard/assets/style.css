@@ -444,23 +444,101 @@ label {
    CHART HEADER
    ═══════════════════════════════════════════════════════════════ */
 
-.chart-header { margin-bottom: 12px; }
+.chart-header { margin-bottom: 14px; }
 
 .chart-title {
-  font-size: 13.5px;
-  font-weight: 700;
+  font-size: 15.5px;
+  font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 5px;
-  letter-spacing: -0.01em;
+  margin-bottom: 7px;
+  letter-spacing: -0.02em;
 }
 
 .chart-desc {
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  border-left: 2px solid var(--border-strong);
-  padding-left: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  line-height: 1.65;
+  border-left: 3px solid var(--primary);
+  padding-left: 10px;
   margin: 0;
+  background: var(--primary-light);
+  padding: 7px 10px;
+  border-radius: 0 6px 6px 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MATERIAL CHECKBOXES LEGEND
+   ═══════════════════════════════════════════════════════════════ */
+
+.mat-cb-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.mat-cb-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 4px 8px 4px 4px;
+  border-radius: 6px;
+  transition: background var(--transition), opacity var(--transition);
+  user-select: none;
+  border: 1px solid transparent;
+}
+
+.mat-cb-item:hover {
+  background: var(--bg-page);
+  border-color: var(--border);
+}
+
+.mat-cb-item--off {
+  opacity: 0.45;
+}
+
+.mat-cb-item--off:hover {
+  opacity: 0.75;
+}
+
+.mat-cb-box {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #0F172A;
+  border-radius: 3px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mat-cb-x {
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  display: block;
+}
+
+.mat-cb-item--off .mat-cb-x {
+  opacity: 0;
+}
+
+.mat-cb-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.mat-cb-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--border-strong);
+  flex-shrink: 0;
+  margin: 0 4px;
 }
 
 /* ═══════════════════════════════════════════════════════════════
