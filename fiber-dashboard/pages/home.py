@@ -1,12 +1,13 @@
 from dash import html
+from utils.data_loader import load_samples, load_fibers, load_contacts
 
 MATERIALS = [
-    ("Nylon",       "#2563EB", "Ø 15 µm"),
-    ("Carbone",     "#EF4444", "Ø 7 µm"),
-    ("Verre",       "#10B981", "Ø 10 µm"),
-    ("Cuivre",      "#F59E0B", "Ø 20 µm"),
-    ("PET recyclé", "#8B5CF6", "Ø 25 µm"),
-    ("Chanvre",     "#059669", "Ø 30 µm"),
+    ("Nylon",       "#2563EB", "Ø ~15 µm"),
+    ("Carbone",     "#EF4444", "Ø ~7 µm"),
+    ("Verre",       "#10B981", "Ø ~10 µm"),
+    ("Cuivre",      "#F59E0B", "Ø ~20 µm"),
+    ("PET recyclé", "#8B5CF6", "Ø ~25 µm"),
+    ("Chanvre",     "#059669", "Ø ~30 µm"),
 ]
 
 PIPELINE = [
@@ -19,6 +20,13 @@ PIPELINE = [
 
 NAV_CARDS = [
     {
+        "href":  "/overview",
+        "icon":  "📦",
+        "color": "#2563EB",
+        "title": "Vue d'ensemble",
+        "desc":  "KPIs globaux, répartition par matériau et statut de traitement, tableau récapitulatif de tous les échantillons.",
+    },
+    {
         "href":  "/microstructure",
         "icon":  "🔬",
         "color": "#2563EB",
@@ -26,18 +34,11 @@ NAV_CARDS = [
         "desc":  "Distributions de diamètre et longueur, orientation 3D par figure de pôle stéréographique, et courbes KDE par matériau.",
     },
     {
-        "href":  "/acoustique",
+        "href":  "/proprietes",
         "icon":  "🔊",
         "color": "#10B981",
-        "title": "Acoustique & Thermique",
-        "desc":  "Courbes d'absorption en fréquence, paramètres du modèle JCA vs porosité, et matrice de corrélation microstructure–propriétés.",
-    },
-    {
-        "href":  "/correlations",
-        "icon":  "📈",
-        "color": "#8B5CF6",
-        "title": "Corrélations",
-        "desc":  "Scatter plot interactif sur 15 variables, droite de régression avec R², et validation prédits vs mesurés pour 4 propriétés.",
+        "title": "Propriétés",
+        "desc":  "Courbes d'absorption en fréquence, paramètres du modèle JCA vs porosité, et corrélations microstructure–propriétés.",
     },
     {
         "href":  "/algorithme",
@@ -72,6 +73,18 @@ def _nav_card(card):
 
 
 def layout() -> html.Div:
+    # Stats dynamiques calculées depuis les données réelles
+    try:
+        samples = load_samples()
+        fibers = load_fibers()
+        contacts = load_contacts()
+        n_samples = len(samples)
+        n_fibers = f"{len(fibers):,}".replace(",", "\u202f")
+        n_contacts = f"{len(contacts):,}".replace(",", "\u202f")
+        n_batches = samples["batch"].nunique()
+    except Exception:
+        n_samples, n_fibers, n_contacts, n_batches = "—", "—", "—", "—"
+
     return html.Div([
 
         # ── Top bar ───────────────────────────────────────────────────────
@@ -106,21 +119,21 @@ def layout() -> html.Div:
                     "Ce dashboard relie quantitativement la microstructure des fibres — "
                     "diamètre, longueur, orientation, porosité — aux propriétés acoustiques "
                     "et thermiques du matériau. Les données proviennent d'une segmentation 3D "
-                    "par tomographie µ-CT sur 6 matériaux et 26 échantillons.",
+                    "par tomographie µ-CT sur 6 matériaux.",
                     className="hero-subtitle",
                 ),
 
                 html.Div([
                     html.Div([
-                        html.Div("26", className="hero-stat-num", style={"color": "#2563EB"}),
+                        html.Div(str(n_samples), className="hero-stat-num", style={"color": "#2563EB"}),
                         html.Div("échantillons analysés", className="hero-stat-label"),
                     ], className="hero-stat"),
                     html.Div([
-                        html.Div("4 952", className="hero-stat-num", style={"color": "#10B981"}),
+                        html.Div(str(n_fibers), className="hero-stat-num", style={"color": "#10B981"}),
                         html.Div("fibres segmentées", className="hero-stat-label"),
                     ], className="hero-stat"),
                     html.Div([
-                        html.Div("2 983", className="hero-stat-num", style={"color": "#8B5CF6"}),
+                        html.Div(str(n_contacts), className="hero-stat-num", style={"color": "#8B5CF6"}),
                         html.Div("contacts fibre-fibre", className="hero-stat-label"),
                     ], className="hero-stat"),
                 ], className="hero-stats"),
@@ -144,7 +157,7 @@ def layout() -> html.Div:
                         html.Span("matériaux distincts", className="data-stat-label"),
                     ], className="data-stat-row"),
                     html.Div([
-                        html.Span("3", className="data-stat-num", style={"color": "#F59E0B"}),
+                        html.Span(str(n_batches), className="data-stat-num", style={"color": "#F59E0B"}),
                         html.Span("lots de fabrication", className="data-stat-label"),
                     ], className="data-stat-row"),
                     html.Div([

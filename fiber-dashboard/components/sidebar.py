@@ -2,10 +2,11 @@ from dash import html, dcc
 from config import COLORS
 
 NAV_ITEMS = [
+    ("/overview",       "📦", "Vue d'ensemble"),
     ("/microstructure", "🔬", "Microstructure"),
-    ("/acoustique",     "🔊", "Acoustique & Thermique"),
-    ("/correlations",   "📈", "Corrélations"),
+    ("/proprietes",     "🔊", "Propriétés"),
     ("/algorithme",     "⚙️",  "Algorithme"),
+    ("/qualite",        "🛡", "Qualité image"),
 ]
 
 

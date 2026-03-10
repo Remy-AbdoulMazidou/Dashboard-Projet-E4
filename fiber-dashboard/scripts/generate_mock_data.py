@@ -281,7 +281,7 @@ def generate_acoustic_thermal(samples_df):
             absorptions[f"absorption_{label}"] = round(float(min(0.99, max(0.01, base + freq_boost + rng.normal(0, 0.03)))), 3)
 
         def noisy(val, scale=0.15):
-            return round(float(val * (1 + rng.normal(0, scale))), 6)
+            return float(val * (1 + rng.normal(0, scale)))
 
         rows.append({
             "sample_id": row["sample_id"],
@@ -289,11 +289,11 @@ def generate_acoustic_thermal(samples_df):
             "mean_diameter_um": mean_d,
             "orientation_dispersion": orient_disp,
             "airflow_resistivity": round(float(airflow_res), 1),
-            "thermal_permeability": round(float(thermal_perm), 4),
+            "thermal_permeability": float(f"{thermal_perm:.6e}"),
             "viscous_length_um": round(float(viscous_length), 2),
             "thermal_length_um": round(float(thermal_length), 2),
             "predicted_airflow_resistivity": noisy(airflow_res),
-            "predicted_thermal_permeability": noisy(thermal_perm),
+            "predicted_thermal_permeability": float(f"{noisy(thermal_perm):.6e}"),
             "predicted_viscous_length_um": noisy(viscous_length),
             "predicted_thermal_length_um": noisy(thermal_length),
             **absorptions,

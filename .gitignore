@@ -1,8 +1,31 @@
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
-.env
+*.pyd
 *.egg-info/
 dist/
 build/
+
+# Environnements virtuels
+venv/
+.venv/
+env/
+
+# Variables d'environnement
+.env
+
+# macOS
 .DS_Store
+.AppleDouble
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Données générées (optionnel : décommenter pour ne pas versionner les CSV mock)
+# fiber-dashboard/data/*.csv
+
+# Fichiers Claude (contexte local, ne pas versionner)
+.claude/

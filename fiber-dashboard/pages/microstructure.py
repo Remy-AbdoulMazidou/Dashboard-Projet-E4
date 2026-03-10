@@ -80,7 +80,7 @@ def layout() -> html.Div:
             ], className="card col-4"),
             html.Div([
                 chart_header(
-                    "PDF — Angle azimutal ψ (0–180°)",
+                    "PDF — Angle azimutal ψ (0–360°)",
                     "Orientation dans le plan de l'image. Une distribution uniforme = réseau isotrope. "
                     "Un pic = orientation préférentielle dans le plan.",
                 ),
