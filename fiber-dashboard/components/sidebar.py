@@ -7,6 +7,7 @@ NAV_ITEMS = [
     ("/proprietes",     "🔊", "Propriétés"),
     ("/algorithme",     "⚙️",  "Algorithme"),
     ("/qualite",        "🛡", "Qualité image"),
+    ("/echantillons",   "🔍", "Échantillons"),
 ]
 
 

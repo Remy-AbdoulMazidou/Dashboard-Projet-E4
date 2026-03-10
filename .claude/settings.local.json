@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(source /Users/remyabdoulmazidou/Desktop/TestDashboardProjet/venv/bin/activate)",
-      "Bash(python3 scripts/generate_mock_data.py)"
-    ]
-  }
-}
