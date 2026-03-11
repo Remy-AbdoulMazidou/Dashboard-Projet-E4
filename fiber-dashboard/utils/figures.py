@@ -269,6 +269,68 @@ def pdf_overlay(data_by_group: dict, xlabel: str = "", mean_line: bool = True) -
     return apply_scientific_theme(fig, xlabel=xlabel, ylabel="Densité de probabilité")
 
 
+def rose_diagram(data_by_group: dict, n_bins: int = 18) -> go.Figure:
+    """Polar rose diagram of azimuthal angles (0–360°) per group.
+    data_by_group = {label: array of angles in degrees}
+    n_bins : number of angular sectors (default 18 → 20° per bin).
+    """
+    fig = go.Figure()
+    bin_edges = np.linspace(0, 360, n_bins + 1)
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    bin_width = 360 / n_bins
+
+    for i, (label, data) in enumerate(data_by_group.items()):
+        arr = np.asarray(data, dtype=float) % 360
+        arr = arr[~np.isnan(arr)]
+        if len(arr) < 3:
+            continue
+        counts, _ = np.histogram(arr, bins=bin_edges)
+        freq = counts / counts.sum() if counts.sum() > 0 else counts
+        color = MATERIAL_COLORS.get(label, _SCI_PALETTE[i % len(_SCI_PALETTE)])
+        fig.add_trace(go.Barpolar(
+            r=freq,
+            theta=bin_centers,
+            width=[bin_width] * n_bins,
+            name=label,
+            marker=dict(
+                color=color,
+                opacity=0.75,
+                line=dict(color="white", width=0.6),
+            ),
+        ))
+
+    fig.update_layout(
+        polar=dict(
+            bgcolor="#F8FAFD",
+            radialaxis=dict(
+                visible=True,
+                showticklabels=False,
+                gridcolor="#E2E8F0",
+                linecolor="#CBD5E1",
+            ),
+            angularaxis=dict(
+                tickfont=dict(size=10, color="#64748B"),
+                direction="clockwise",
+                rotation=90,
+                dtick=30,
+                gridcolor="#E2E8F0",
+                linecolor="#CBD5E1",
+            ),
+        ),
+        paper_bgcolor="white",
+        font=dict(color="#0F172A", family="Inter, system-ui, sans-serif"),
+        legend=dict(
+            font=dict(size=10, color="#0F172A"),
+            itemsizing="constant",
+            bgcolor="rgba(255,255,255,0.95)",
+            bordercolor="#E2E8F0",
+            borderwidth=1,
+        ),
+        margin=dict(t=20, r=20, b=20, l=20),
+    )
+    return fig
+
+
 def pole_figure_pub(df: pd.DataFrame, theta_col: str, psi_col: str,
                     color_col: str = None, size_col: str = None) -> go.Figure:
     """Pole figure stéréographique : r = θ, angle = ψ, couleurs par groupe."""

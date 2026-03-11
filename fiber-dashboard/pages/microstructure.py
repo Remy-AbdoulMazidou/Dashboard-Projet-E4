@@ -80,11 +80,11 @@ def layout() -> html.Div:
             ], className="card col-4"),
             html.Div([
                 chart_header(
-                    "PDF — Angle azimutal ψ (0–360°)",
-                    "Orientation dans le plan de l'image. Une distribution uniforme = réseau isotrope. "
-                    "Un pic = orientation préférentielle dans le plan.",
+                    "Rosace des orientations azimutales ψ (0–360°)",
+                    "Diagramme polaire de la distribution angulaire des fibres dans le plan. "
+                    "Une rosace uniforme = réseau isotrope. Un lobe dominant = orientation préférentielle.",
                 ),
-                dcc.Graph(id="ms-pdf-psi", style={"height": "280px"}),
+                dcc.Graph(id="ms-rose-psi", style={"height": "280px"}),
             ], className="card col-4"),
             html.Div([
                 chart_header(
@@ -117,7 +117,36 @@ def layout() -> html.Div:
             ], className="card col-12"),
         ], className="row"),
 
-        # ── Section 4 : Polydispersité et élancement ─────────────────────
+        # ── Section 4 : Carte longueur × diamètre ─────────────────────────
+        html.H3("Carte longueur × diamètre des fibres individuelles", className="section-separator"),
+        info_box(
+            "Ce nuage de points positionne chaque fibre individuellement selon son diamètre (X) "
+            "et sa longueur (Y), coloré par matériau. Les diagonales représentent des rapports "
+            "d'élancement λ = longueur/diamètre constants. Cette visualisation révèle la "
+            "polydispersité réelle de chaque matériau et les populations distinctes de fibres."
+        ),
+        guide_box("Comment lire ce graphique ?", [
+            "Points en haut à gauche → fibres très élancées (longues, fines) : Carbone, typiquement.",
+            "Points en bas à droite → fibres courtes et épaisses : Cuivre, PET recyclé.",
+            "Nuage compact → matériau homogène (fibres similaires entre elles).",
+            "Nuage dispersé → forte polydispersité, propriétés acoustiques variables d'un échantillon à l'autre.",
+        ]),
+        html.Div([
+            html.Div([
+                dcc.Graph(id="ms-scatter-lxd", style={"height": "420px"}),
+            ], className="card col-8"),
+            html.Div([
+                chart_header(
+                    "Contacts par fibre (nombre de coordination)",
+                    "Nombre de liaisons fibre-fibre identifiées. "
+                    "Un nombre de contacts élevé indique un réseau très interconnecté, "
+                    "favorisant la rigidité mécanique du matériau.",
+                ),
+                dcc.Graph(id="ms-box-contacts", style={"height": "420px"}),
+            ], className="card col-4"),
+        ], className="row"),
+
+        # ── Section 5 : Polydispersité et élancement ─────────────────────
         html.H3("Polydispersité et rapport d'élancement", className="section-separator"),
         info_box(
             "La polydispersité mesure l'hétérogénéité des diamètres de fibres au sein d'un matériau. "
@@ -213,7 +242,7 @@ def update_morphology(materials, batches):
 
 @callback(
     Output("ms-pdf-diameter", "figure"),
-    Output("ms-pdf-psi", "figure"),
+    Output("ms-rose-psi", "figure"),
     Output("ms-pdf-theta", "figure"),
     Input("ms-filter-material", "value"),
     Input("ms-filter-batch", "value"),
@@ -237,9 +266,55 @@ def update_kde(materials, batches):
 
     return (
         fig_utils.pdf_overlay(data_d, xlabel="Diamètre (µm)"),
-        fig_utils.pdf_overlay(data_p, xlabel="Angle azimutal ψ (°)"),
+        fig_utils.rose_diagram(data_p),
         fig_utils.pdf_overlay(data_t, xlabel="Angle zénithal θ (°)"),
     )
+
+
+@callback(
+    Output("ms-scatter-lxd", "figure"),
+    Output("ms-box-contacts", "figure"),
+    Input("ms-filter-material", "value"),
+    Input("ms-filter-batch", "value"),
+)
+def update_fiber_scatter(materials, batches):
+    try:
+        filtered_samples = filter_samples(materials=materials or None, batches=batches or None)
+        fibers = load_fibers()
+        fibers = fibers[fibers["sample_id"].isin(filtered_samples["sample_id"])]
+        fibers_mat = fibers.merge(
+            filtered_samples[["sample_id", "material"]], on="sample_id", how="left"
+        )
+
+        if fibers_mat.empty:
+            empty = fig_utils.empty_figure("Aucune donnée pour ce filtre")
+            return empty, empty
+
+        # Scatter longueur × diamètre (sous-échantillonné si > 2000 pts)
+        plot_df = fibers_mat.dropna(subset=["diameter_um", "length_um", "material"])
+        if len(plot_df) > 2000:
+            plot_df = plot_df.sample(2000, random_state=42)
+
+        scatter_fig = fig_utils.scatter(
+            plot_df, "diameter_um", "length_um",
+            color_col="material",
+            title="Carte longueur × diamètre des fibres",
+            xlabel="Diamètre (µm)",
+            ylabel="Longueur (µm)",
+        )
+
+        # Boxplot nombre de contacts par fibre
+        contacts_fig = fig_utils.boxplot_by_group(
+            fibers_mat.dropna(subset=["n_contacts", "material"]),
+            "n_contacts", "material",
+            "Contacts par fibre par matériau",
+            "Nombre de contacts",
+        )
+
+        return scatter_fig, contacts_fig
+    except Exception:
+        empty = fig_utils.empty_figure("Données non disponibles")
+        return empty, empty
 
 
 @callback(
