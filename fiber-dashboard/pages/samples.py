@@ -1,4 +1,5 @@
 from dash import html, dcc, callback, Input, Output, dash_table
+import pandas as pd
 
 from components.filters import sample_selector
 from utils.data_loader import load_samples, load_fibers
@@ -18,23 +19,31 @@ def layout() -> html.Div:
 
         html.Div(id="sp-sample-card", className="card col-12"),
 
-        html.Div(
-            [
+        html.Div([
+            html.Div([
+                html.Div(
+                    "Visualisation µ-CT",
+                    style={"fontWeight": "600", "fontSize": "12px",
+                           "color": "#64748B", "marginBottom": "8px"},
+                ),
                 html.Div([
-                    html.Div("Image brute", className="image-placeholder-label"),
-                    html.Div("Image brute — à intégrer", className="image-placeholder"),
-                ], className="card col-4"),
-                html.Div([
-                    html.Div("Image segmentée", className="image-placeholder-label"),
-                    html.Div("Image segmentée — à intégrer", className="image-placeholder"),
-                ], className="card col-4"),
-                html.Div([
-                    html.Div("Overlay", className="image-placeholder-label"),
-                    html.Div("Image overlay — à intégrer", className="image-placeholder"),
-                ], className="card col-4"),
-            ],
-            className="row",
-        ),
+                    html.Span("🔬", style={"fontSize": "28px", "display": "block",
+                                           "textAlign": "center", "marginBottom": "8px"}),
+                    html.Div(
+                        "Images µ-CT brutes, segmentées et overlays à intégrer depuis "
+                        "le répertoire assets/images/. Nommez les fichiers "
+                        "{sample_id}_raw.png, {sample_id}_seg.png, {sample_id}_overlay.png.",
+                        style={"fontSize": "12px", "color": "#94A3B8",
+                               "textAlign": "center", "lineHeight": "1.5"},
+                    ),
+                ], style={
+                    "border": "2px dashed #E2E8F0",
+                    "borderRadius": "8px",
+                    "padding": "24px 16px",
+                    "background": "#F8FAFC",
+                }),
+            ], className="card col-12"),
+        ], className="row"),
 
         html.Div(
             [
@@ -100,9 +109,11 @@ def update_sample_view(sample_id):
             ],
             style={"display": "grid", "gridTemplateColumns": "repeat(4, 1fr)", "gap": "4px"},
         ),
-        html.Div(f"Notes : {row['notes']}" if row.get("notes") else "",
-                 style={"color": COLORS["text_secondary"], "fontSize": "12px",
-                        "marginTop": "10px", "fontStyle": "italic"}),
+        html.Div(
+            f"Notes : {row['notes']}" if (row.get("notes") and not pd.isna(row.get("notes", ""))) else "",
+            style={"color": COLORS["text_secondary"], "fontSize": "12px",
+                   "marginTop": "10px", "fontStyle": "italic"},
+        ),
     ])
 
     if sample_fibers.empty:

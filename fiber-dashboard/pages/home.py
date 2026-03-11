@@ -1,19 +1,13 @@
 from dash import html
 from utils.data_loader import load_samples, load_fibers, load_contacts
+from config import MATERIALS_DETAIL
 
-MATERIALS = [
-    ("Nylon",       "#2563EB", "Ø ~15 µm"),
-    ("Carbone",     "#EF4444", "Ø ~7 µm"),
-    ("Verre",       "#10B981", "Ø ~10 µm"),
-    ("Cuivre",      "#F59E0B", "Ø ~20 µm"),
-    ("PET recyclé", "#8B5CF6", "Ø ~25 µm"),
-    ("Chanvre",     "#059669", "Ø ~30 µm"),
-]
+MATERIALS = MATERIALS_DETAIL
 
 PIPELINE = [
     ("01", "Acquisition µ-CT",  "Résolution 1–20 µm/voxel, volume 3D"),
-    ("02", "Segmentation 3D",   "Algorithme Depriester et al. (2022)"),
-    ("03", "Morphologie",       "Diamètre, longueur, orientation"),
+    ("02", "Segmentation 3D",   "Détection des fibres dans le volume µ-CT"),
+    ("03", "Morphologie",       "Diamètre, longueur, orientation 3D"),
     ("04", "Propriétés JCA",    "Résistivité, absorption, thermique"),
     ("05", "Corrélations",      "Régression linéaire, validation"),
 ]

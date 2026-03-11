@@ -88,7 +88,16 @@ PLOTLY_TEMPLATE = {
     }
 }
 
-MATERIALS = ["Nylon", "Carbone", "Verre", "Cuivre", "PET recyclé", "Chanvre"]
+# (name, color, typical_diameter_label)
+MATERIALS_DETAIL = [
+    ("Nylon",       "#2563EB", "Ø ~15 µm"),
+    ("Carbone",     "#EF4444", "Ø ~7 µm"),
+    ("Verre",       "#10B981", "Ø ~10 µm"),
+    ("Cuivre",      "#F59E0B", "Ø ~20 µm"),
+    ("PET recyclé", "#8B5CF6", "Ø ~25 µm"),
+    ("Chanvre",     "#059669", "Ø ~30 µm"),
+]
+MATERIALS = [name for name, _, _ in MATERIALS_DETAIL]
 BATCHES   = ["LOT-A", "LOT-B", "LOT-C"]
 STATUSES  = ["completed", "in_progress", "failed"]
 

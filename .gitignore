@@ -29,3 +29,6 @@ env/
 
 # Fichiers Claude (contexte local, ne pas versionner)
 .claude/
+
+# Articles PDF (trop lourds pour git, à conserver en local)
+fiber-dashboard/article/

@@ -43,7 +43,7 @@ def boxplot_by_group(df: pd.DataFrame, value_col: str, group_col: str,
             name=group,
             marker_color=color,
             line_color=color,
-            fillcolor=color.replace(")", ", 0.15)").replace("rgb", "rgba") if color.startswith("rgb") else color + "26",
+            fillcolor=color + "26",
             boxmean="sd",
             line_width=1.8,
         ))

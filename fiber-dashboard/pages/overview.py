@@ -4,7 +4,7 @@ import pandas as pd
 from components.kpi_card import kpi_card
 from components.filters import material_filter, batch_filter, status_filter, filter_bar
 from components.info_box import info_box, guide_box, chart_header
-from utils.data_loader import load_samples
+from utils.data_loader import load_samples, filter_samples, load_fibers, load_contacts
 from utils.stats import format_large_number
 from utils import figures as fig_utils
 from config import COLORS, TABLE_STYLE
@@ -79,58 +79,60 @@ def layout() -> html.Div:
     Input("ov-filter-status", "value"),
 )
 def update_overview(materials, batches, statuses):
-    from utils.data_loader import filter_samples, load_fibers, load_contacts
+    try:
+        df = filter_samples(
+            materials=materials or None,
+            batches=batches or None,
+            statuses=statuses or None,
+        )
+        all_fibers = load_fibers()
+        all_contacts = load_contacts()
 
-    df = filter_samples(
-        materials=materials or None,
-        batches=batches or None,
-        statuses=statuses or None,
-    )
+        n_samples = len(df)
+        total_fibers = format_large_number(all_fibers[all_fibers["sample_id"].isin(df["sample_id"])]["fiber_id"].count())
+        total_contacts = format_large_number(all_contacts[all_contacts["sample_id"].isin(df["sample_id"])].shape[0])
+        mean_porosity = f"{df['porosity'].mean():.3f}" if not df.empty else "—"
+        total_runtime = format_large_number(df["runtime_sec"].sum()) + " s" if not df.empty else "—"
+        mean_quality = f"{df['quality_score'].mean():.1f} / 5" if not df.empty else "—"
 
-    all_fibers = load_fibers()
-    all_contacts = load_contacts()
+        kpis = html.Div([
+            kpi_card("📦", str(n_samples), "Échantillons analysés", color=COLORS["primary"]),
+            kpi_card("🧵", total_fibers, "Fibres détectées", color=COLORS["success"]),
+            kpi_card("🔗", total_contacts, "Contacts identifiés", color=COLORS["warning"]),
+            kpi_card("💧", mean_porosity, "Porosité moyenne (0–1)", color=COLORS["neutral"]),
+            kpi_card("⏱", total_runtime, "Temps calcul total", color=COLORS["accent"]),
+            kpi_card("⭐", mean_quality, "Score qualité moyen /5", color=COLORS["primary"]),
+        ], className="kpi-row")
 
-    n_samples = len(df)
-    total_fibers = format_large_number(all_fibers[all_fibers["sample_id"].isin(df["sample_id"])]["fiber_id"].count())
-    total_contacts = format_large_number(all_contacts[all_contacts["sample_id"].isin(df["sample_id"])].shape[0])
-    mean_porosity = f"{df['porosity'].mean():.3f}" if not df.empty else "—"
-    total_runtime = format_large_number(df["runtime_sec"].sum()) + " s" if not df.empty else "—"
-    mean_quality = f"{df['quality_score'].mean():.1f} / 5" if not df.empty else "—"
+        fibers_by_material = df.groupby("material")["fiber_count"].sum().reset_index()
+        bar_mat = fig_utils.bar_chart(
+            fibers_by_material, "material", "fiber_count",
+            "Fibres détectées par matériau", color_col="material",
+            xlabel="Matériau", ylabel="Nombre de fibres",
+        )
 
-    kpis = html.Div([
-        kpi_card("📦", str(n_samples), "Échantillons analysés", color=COLORS["primary"]),
-        kpi_card("🧵", total_fibers, "Fibres détectées", color=COLORS["success"]),
-        kpi_card("🔗", total_contacts, "Contacts identifiés", color=COLORS["warning"]),
-        kpi_card("💧", mean_porosity, "Porosité moyenne (0–1)", color=COLORS["neutral"]),
-        kpi_card("⏱", total_runtime, "Temps calcul total", color=COLORS["accent"]),
-        kpi_card("⭐", mean_quality, "Score qualité moyen /5", color=COLORS["primary"]),
-    ], className="kpi-row")
+        status_counts = df["status"].value_counts().reset_index()
+        status_counts.columns = ["status", "count"]
+        pie_status = fig_utils.pie_chart(
+            labels=status_counts["status"].tolist(),
+            values=status_counts["count"].tolist(),
+            title="Répartition des statuts",
+        )
 
-    fibers_by_material = df.groupby("material")["fiber_count"].sum().reset_index()
-    bar_mat = fig_utils.bar_chart(
-        fibers_by_material, "material", "fiber_count",
-        "Fibres détectées par matériau", color_col="material",
-        xlabel="Matériau", ylabel="Nombre de fibres",
-    )
+        table_cols = ["sample_id", "material", "batch", "fiber_count", "porosity",
+                      "mean_diameter_um", "quality_score", "status"]
+        table_data = df[table_cols].to_dict("records")
+        table = dash_table.DataTable(
+            data=table_data,
+            columns=[{"name": c, "id": c} for c in table_cols],
+            page_size=12,
+            sort_action="native",
+            filter_action="native",
+            **TABLE_STYLE,
+        )
 
-    status_counts = df["status"].value_counts().reset_index()
-    status_counts.columns = ["status", "count"]
-    pie_status = fig_utils.pie_chart(
-        labels=status_counts["status"].tolist(),
-        values=status_counts["count"].tolist(),
-        title="Répartition des statuts",
-    )
+        return kpis, bar_mat, pie_status, table
 
-    table_cols = ["sample_id", "material", "batch", "fiber_count", "porosity",
-                  "mean_diameter_um", "quality_score", "status"]
-    table_data = df[table_cols].to_dict("records")
-    table = dash_table.DataTable(
-        data=table_data,
-        columns=[{"name": c, "id": c} for c in table_cols],
-        page_size=12,
-        sort_action="native",
-        filter_action="native",
-        **TABLE_STYLE,
-    )
-
-    return kpis, bar_mat, pie_status, table
+    except Exception:
+        empty = fig_utils.empty_figure("Données non disponibles")
+        return html.Div("Erreur de chargement des données", style={"color": COLORS["danger"]}), empty, empty, html.Div()
