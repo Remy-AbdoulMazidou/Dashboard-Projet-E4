@@ -80,9 +80,9 @@ def layout() -> html.Div:
             ], className="card col-4"),
             html.Div([
                 chart_header(
-                    "Rosace des orientations azimutales ψ (0–360°)",
-                    "Diagramme polaire de la distribution angulaire des fibres dans le plan. "
-                    "Une rosace uniforme = réseau isotrope. Un lobe dominant = orientation préférentielle.",
+                    "Rosace des orientations azimutales ψ",
+                    "Distribution polaire des angles ψ dans le plan. "
+                    "Une rosace uniforme = réseau isotrope. Un lobe = orientation préférentielle.",
                 ),
                 dcc.Graph(id="ms-rose-psi", style={"height": "280px"}),
             ], className="card col-4"),
@@ -117,68 +117,41 @@ def layout() -> html.Div:
             ], className="card col-12"),
         ], className="row"),
 
-        # ── Section 4 : Carte longueur × diamètre ─────────────────────────
-        html.H3("Carte longueur × diamètre des fibres individuelles", className="section-separator"),
-        info_box(
-            "Ce nuage de points positionne chaque fibre individuellement selon son diamètre (X) "
-            "et sa longueur (Y), coloré par matériau. Les diagonales représentent des rapports "
-            "d'élancement λ = longueur/diamètre constants. Cette visualisation révèle la "
-            "polydispersité réelle de chaque matériau et les populations distinctes de fibres."
-        ),
-        guide_box("Comment lire ce graphique ?", [
-            "Points en haut à gauche → fibres très élancées (longues, fines) : Carbone, typiquement.",
-            "Points en bas à droite → fibres courtes et épaisses : Cuivre, PET recyclé.",
-            "Nuage compact → matériau homogène (fibres similaires entre elles).",
-            "Nuage dispersé → forte polydispersité, propriétés acoustiques variables d'un échantillon à l'autre.",
-        ]),
+        # ── Section 4 : Géométrie individuelle des fibres ─────────────────
+        html.H3("Géométrie individuelle des fibres", className="section-separator"),
         html.Div([
             html.Div([
-                dcc.Graph(id="ms-scatter-lxd", style={"height": "420px"}),
+                chart_header(
+                    "Longueur × diamètre par fibre",
+                    "Chaque point est une fibre. Révèle la polydispersité réelle "
+                    "et les populations distinctes par matériau.",
+                ),
+                dcc.Graph(id="ms-scatter-lxd", style={"height": "380px"}),
             ], className="card col-8"),
             html.Div([
                 chart_header(
-                    "Contacts par fibre (nombre de coordination)",
-                    "Nombre de liaisons fibre-fibre identifiées. "
-                    "Un nombre de contacts élevé indique un réseau très interconnecté, "
-                    "favorisant la rigidité mécanique du matériau.",
+                    "Contacts par fibre",
+                    "Nombre de liaisons fibre-fibre. Un réseau très interconnecté "
+                    "améliore la rigidité mécanique du matériau.",
                 ),
-                dcc.Graph(id="ms-box-contacts", style={"height": "420px"}),
+                dcc.Graph(id="ms-box-contacts", style={"height": "380px"}),
             ], className="card col-4"),
         ], className="row"),
-
-        # ── Section 5 : Polydispersité et élancement ─────────────────────
-        html.H3("Polydispersité et rapport d'élancement", className="section-separator"),
-        info_box(
-            "La polydispersité mesure l'hétérogénéité des diamètres de fibres au sein d'un matériau. "
-            "Elle est quantifiée par le coefficient de variation CV = σ/μ : plus il est élevé, "
-            "plus les fibres sont de tailles disparates, ce qui complique la prédiction "
-            "des propriétés acoustiques. Le rapport d'élancement λ = longueur/diamètre "
-            "caractérise la géométrie globale : des fibres longues et fines (grand λ) "
-            "interconnectent mieux le réseau et améliorent l'absorption par friction visqueuse "
-            "(Tran et al., IJSS 2024)."
-        ),
-        guide_box("Interprétation physique", [
-            "CV faible (< 0,15) → fibres homogènes, propriétés acoustiques reproductibles et prévisibles.",
-            "CV élevé (> 0,30) → forte dispersion des diamètres, comportement acoustique plus difficile à modéliser.",
-            "Grand élancement λ (> 60) → fibres flexibles, réseau dense, meilleure absorption haute fréquence.",
-            "Faible élancement λ (< 30) → fibres rigides et courtes, moins d'interconnexions dans le réseau.",
-        ]),
         html.Div([
             html.Div([
                 chart_header(
                     "Coefficient de variation du diamètre (CV = σ/μ)",
-                    "Quantifie l'hétérogénéité des diamètres par matériau. "
-                    "Un CV élevé indique que les fibres ont des tailles très variables.",
+                    "Quantifie la polydispersité par matériau. "
+                    "Un CV élevé = diamètres très variables entre les fibres.",
                 ),
-                dcc.Graph(id="ms-bar-cv", style={"height": "300px"}),
+                dcc.Graph(id="ms-bar-cv", style={"height": "280px"}),
             ], className="card col-6"),
             html.Div([
                 chart_header(
                     "Rapport d'élancement moyen (λ = longueur / diamètre)",
-                    "Les fibres à grand λ forment un réseau plus interconnecté et dense. "
-                    "Valeurs typiques : Chanvre > 60, Carbone > 150.",
+                    "Grand λ = fibres longues et fines, réseau dense et interconnecté.",
                 ),
-                dcc.Graph(id="ms-bar-slenderness", style={"height": "300px"}),
+                dcc.Graph(id="ms-bar-slenderness", style={"height": "280px"}),
             ], className="card col-6"),
         ], className="row"),
 
@@ -188,12 +161,10 @@ def layout() -> html.Div:
             "Les 6 matériaux présentent des géométries fibreuses très distinctes : le Carbone "
             "possède les fibres les plus fines (Ø ~7 µm, absorption maximale attendue), tandis que "
             "le Chanvre présente les fibres les plus épaisses (Ø ~30 µm). Les courbes KDE montrent "
-            "que le Nylon et le PET recyclé ont des distributions de diamètre plus larges (CV > 0,25), "
+            "que le Nylon et le PET recyclé ont des distributions de diamètre plus larges, "
             "suggérant une variabilité de fabrication plus importante. La figure de pôle révèle "
             "que la plupart des matériaux ont une légère orientation préférentielle dans le plan "
-            "(θ moyen > 45°), ce qui influence directement leur résistivité à l'écoulement. "
-            "Le rapport d'élancement confirme que le Carbone et le Chanvre ont les réseaux "
-            "fibreux les plus interconnectés.",
+            "(θ moyen > 45°), ce qui influence directement leur résistivité à l'écoulement.",
         ),
 
     ], className="page-content")
@@ -272,52 +243,6 @@ def update_kde(materials, batches):
 
 
 @callback(
-    Output("ms-scatter-lxd", "figure"),
-    Output("ms-box-contacts", "figure"),
-    Input("ms-filter-material", "value"),
-    Input("ms-filter-batch", "value"),
-)
-def update_fiber_scatter(materials, batches):
-    try:
-        filtered_samples = filter_samples(materials=materials or None, batches=batches or None)
-        fibers = load_fibers()
-        fibers = fibers[fibers["sample_id"].isin(filtered_samples["sample_id"])]
-        fibers_mat = fibers.merge(
-            filtered_samples[["sample_id", "material"]], on="sample_id", how="left"
-        )
-
-        if fibers_mat.empty:
-            empty = fig_utils.empty_figure("Aucune donnée pour ce filtre")
-            return empty, empty
-
-        # Scatter longueur × diamètre (sous-échantillonné si > 2000 pts)
-        plot_df = fibers_mat.dropna(subset=["diameter_um", "length_um", "material"])
-        if len(plot_df) > 2000:
-            plot_df = plot_df.sample(2000, random_state=42)
-
-        scatter_fig = fig_utils.scatter(
-            plot_df, "diameter_um", "length_um",
-            color_col="material",
-            title="Carte longueur × diamètre des fibres",
-            xlabel="Diamètre (µm)",
-            ylabel="Longueur (µm)",
-        )
-
-        # Boxplot nombre de contacts par fibre
-        contacts_fig = fig_utils.boxplot_by_group(
-            fibers_mat.dropna(subset=["n_contacts", "material"]),
-            "n_contacts", "material",
-            "Contacts par fibre par matériau",
-            "Nombre de contacts",
-        )
-
-        return scatter_fig, contacts_fig
-    except Exception:
-        empty = fig_utils.empty_figure("Données non disponibles")
-        return empty, empty
-
-
-@callback(
     Output("ms-pole-figure", "figure"),
     Input("ms-filter-material", "value"),
     Input("ms-filter-batch", "value"),
@@ -346,6 +271,48 @@ def update_pole_figure(materials, batches):
 
 
 @callback(
+    Output("ms-scatter-lxd", "figure"),
+    Output("ms-box-contacts", "figure"),
+    Input("ms-filter-material", "value"),
+    Input("ms-filter-batch", "value"),
+)
+def update_fiber_scatter(materials, batches):
+    try:
+        filtered_samples = filter_samples(materials=materials or None, batches=batches or None)
+        fibers = load_fibers()
+        fibers = fibers[fibers["sample_id"].isin(filtered_samples["sample_id"])]
+        fibers_mat = fibers.merge(
+            filtered_samples[["sample_id", "material"]], on="sample_id", how="left"
+        )
+
+        if fibers_mat.empty:
+            empty = fig_utils.empty_figure("Aucune donnée pour ce filtre")
+            return empty, empty
+
+        plot_df = fibers_mat.dropna(subset=["diameter_um", "length_um", "material"])
+        if len(plot_df) > 2000:
+            plot_df = plot_df.sample(2000, random_state=42)
+
+        scatter_fig = fig_utils.scatter(
+            plot_df, "diameter_um", "length_um",
+            color_col="material",
+            title="Longueur × diamètre des fibres",
+            xlabel="Diamètre (µm)",
+            ylabel="Longueur (µm)",
+        )
+        contacts_fig = fig_utils.boxplot_by_group(
+            fibers_mat.dropna(subset=["n_contacts", "material"]),
+            "n_contacts", "material",
+            "Contacts par fibre",
+            "Nombre de contacts",
+        )
+        return scatter_fig, contacts_fig
+    except Exception:
+        empty = fig_utils.empty_figure("Données non disponibles")
+        return empty, empty
+
+
+@callback(
     Output("ms-bar-cv", "figure"),
     Output("ms-bar-slenderness", "figure"),
     Input("ms-filter-material", "value"),
@@ -364,7 +331,6 @@ def update_morphology_advanced(materials, batches):
             empty = fig_utils.empty_figure("Aucune donnée pour ce filtre")
             return empty, empty
 
-        # Coefficient de variation du diamètre : σ/μ par matériau
         cv_df = (
             fibers_mat.groupby("material")["diameter_um"]
             .agg(lambda s: s.std() / s.mean() if s.mean() > 0 else 0)
@@ -373,22 +339,17 @@ def update_morphology_advanced(materials, batches):
         )
         bar_cv = fig_utils.bar_chart(
             cv_df, "material", "CV_diametre",
-            "Coefficient de variation du diamètre par matériau",
+            "Coefficient de variation du diamètre",
             color_col="material",
             xlabel="Matériau", ylabel="CV = σ/μ",
         )
 
-        # Rapport d'élancement λ = longueur / diamètre par fibre
         fibers_sl = fibers_mat.copy()
         fibers_sl["slenderness"] = fibers_sl["length_um"] / fibers_sl["diameter_um"].clip(lower=0.1)
-        sl_df = (
-            fibers_sl.groupby("material")["slenderness"]
-            .mean()
-            .reset_index()
-        )
+        sl_df = fibers_sl.groupby("material")["slenderness"].mean().reset_index()
         bar_sl = fig_utils.bar_chart(
             sl_df, "material", "slenderness",
-            "Rapport d'élancement moyen par matériau",
+            "Rapport d'élancement moyen",
             color_col="material",
             xlabel="Matériau", ylabel="λ = longueur/diamètre",
         )
