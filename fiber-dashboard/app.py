@@ -393,64 +393,6 @@ def _absorption_card():
     ]), xs=12, md=12, className="mb-4")
 
 
-def _pipeline_schematic():
-    accent = TABS["contacts"]["bg"]
-    steps = [
-        ("🖼", "Image CT", "Phase fibreuse\nbinarisée"),
-        ("📐", "Orientation\nlocale", "Matrice d'inertie\npar voxel"),
-        ("✂", "Séparation", "Seuillage angle\nde misorientation"),
-        ("🔧", "Reconstruction", "Dilation\nlongitudinale"),
-        ("🔗", "Contacts &\nDescripteurs", "Aires · angles\nlongueurs · courbures"),
-    ]
-    step_bg  = ["#EFF6FF", "#ECFDF5", "#ECFDF5", "#ECFDF5", "#FFF7ED"]
-    step_bd  = ["#93C5FD", accent,    accent,    accent,    "#FDBA74"]
-    elems = []
-    for i, (icon, label, sub) in enumerate(steps):
-        elems.append(html.Div([
-            html.Div(icon, style={"fontSize": "20px", "marginBottom": "5px"}),
-            html.Div(label, style={
-                "fontWeight": 700, "fontSize": "12px", "color": "#0F172A",
-                "lineHeight": "1.35", "textAlign": "center",
-            }),
-            html.Div(sub, style={
-                "fontSize": "10px", "color": "#64748B",
-                "textAlign": "center", "marginTop": "4px", "lineHeight": "1.4",
-            }),
-        ], style={
-            "backgroundColor": step_bg[i],
-            "border": f"1.5px solid {step_bd[i]}",
-            "borderRadius": "8px",
-            "padding": "12px 14px",
-            "flex": "1 1 110px",
-            "display": "flex", "flexDirection": "column", "alignItems": "center",
-        }))
-        if i < len(steps) - 1:
-            elems.append(html.Div("→", style={
-                "fontSize": "18px", "color": "#94A3B8",
-                "fontWeight": 700, "alignSelf": "center",
-                "flexShrink": 0, "padding": "0 4px",
-            }))
-    return html.Div([
-        html.Div([
-            html.Span("Pipeline algorithmique — ", style={
-                "fontWeight": 700, "fontSize": "13px", "color": accent,
-            }),
-            html.Span("Depriester et al. (2022)", style={
-                "fontSize": "13px", "color": "#0F172A", "fontWeight": 600,
-            }),
-        ]),
-        html.Div(elems, style={
-            "display": "flex", "alignItems": "stretch",
-            "gap": "4px", "flexWrap": "wrap", "marginTop": "14px",
-        }),
-    ], style={
-        "backgroundColor": "#F0FDF4",
-        "border": "1px solid #A7F3D0",
-        "borderLeft": f"5px solid {accent}",
-        "borderRadius": "10px",
-        "padding": "18px 22px",
-        "marginBottom": "24px",
-    })
 
 
 # ─── Layout ───────────────────────────────────────────────────────────────────
@@ -674,14 +616,40 @@ app.layout = dbc.Container(fluid=True, style={
                             ]),
                             dbc.Row(className="px-1 g-3", children=[
                                 graph_card(
-                                    "graph-cv-diameter",
-                                    "Polydispersité du diamètre — coefficient de variation (CV%)",
-                                    "Le CV% = écart-type / moyenne × 100. "
-                                    "Tran et al. (2024) montrent que ce paramètre gouverne les propriétés acoustiques "
-                                    "via deux diamètres représentatifs selon la gamme de fréquences.",
-                                    "CV% élevé = fibres de tailles très variées (matériau polydisperse). "
-                                    "CV% faible = toutes les fibres ont à peu près le même diamètre. "
-                                    "Survolez les barres pour voir les valeurs exactes.",
+                                    "graph-orientation-polar",
+                                    "Distribution polaire des orientations de fibres (θ, ψ)",
+                                    "Chaque point représente une fibre. Le rayon θ indique l'inclinaison "
+                                    "(0° = à plat, 90° = vertical), l'angle ψ l'azimut dans le plan. "
+                                    "Un nuage concentré révèle des fibres alignées (matériau anisotrope).",
+                                    "Points groupés près du centre = fibres quasi-horizontales (cas typique). "
+                                    "Répartition uniforme sur 360° = matériau transversalement isotrope. "
+                                    "Utilisez les cases ci-dessous pour afficher ou masquer un matériau.",
+                                    height="300px", col_width=6,
+                                    accent=TABS["morphology"]["bg"],
+                                ),
+                                graph_card(
+                                    "graph-slenderness",
+                                    "Élancement des fibres λ = L / D",
+                                    "Rapport longueur / diamètre pour chaque fibre. "
+                                    "Depriester et al. (2022) montrent que λ ≥ 3 est nécessaire "
+                                    "pour une séparation fiable par l'algorithme.",
+                                    "Ligne rouge = seuil λ = 3 (Depriester et al., 2022). "
+                                    "Boîte au-dessus du seuil = fibres correctement séparables. "
+                                    "Survolez pour voir les valeurs exactes par matériau.",
+                                    height="300px", col_width=6,
+                                    accent=TABS["morphology"]["bg"],
+                                ),
+                            ]),
+                            dbc.Row(className="px-1 g-3", children=[
+                                graph_card(
+                                    "graph-coordination",
+                                    "Degré de coordination — nombre de contacts par fibre",
+                                    "Chaque fibre touche en moyenne combien de voisines ? "
+                                    "Ce degré de coordination caractérise la connectivité du réseau fibreux "
+                                    "et influence sa rigidité mécanique et sa résistance au passage de l'air.",
+                                    "Pic à 0 ou 1 = beaucoup de fibres isolées (réseau peu dense). "
+                                    "Pic décalé à droite = réseau fortement interconnecté. "
+                                    "Utilisez les cases ci-dessous pour afficher ou masquer un matériau.",
                                     height="280px", col_width=12,
                                     accent=TABS["morphology"]["bg"],
                                 ),
@@ -704,7 +672,6 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Porosité : plus la porosité est faible, plus les fibres sont serrées et se touchent souvent.",
                                 ],
                             ),
-                            _pipeline_schematic(),
                             dbc.Row(className="px-1 g-3", children=[
                                 graph_card(
                                     "graph-contact-area",
@@ -737,6 +704,20 @@ app.layout = dbc.Container(fluid=True, style={
                                     "Pic à 90° → matériau isotrope, fibres dans toutes les directions. "
                                     "Pic à faible angle → matériau anisotrope, fibres alignées. "
                                     "Utilisez les cases ci-dessous pour afficher ou masquer un matériau.",
+                                    height="280px", col_width=12,
+                                    accent=TABS["contacts"]["bg"],
+                                ),
+                            ]),
+                            dbc.Row(className="px-1 g-3", children=[
+                                graph_card(
+                                    "graph-robustness",
+                                    "Robustesse de l'algorithme — effet du sous-échantillonnage et du bruit",
+                                    "Depriester et al. (2022) évaluent comment la séparation des fibres résiste "
+                                    "à la dégradation de l'image (résolution réduite, bruit d'acquisition). "
+                                    "Chaque courbe correspond à un niveau de bruit différent.",
+                                    "Score élevé = séparation fiable malgré la dégradation de l'image. "
+                                    "Chute rapide = seuil critique en dessous duquel l'algorithme devient non fiable. "
+                                    "Utile pour choisir la résolution minimale d'acquisition.",
                                     height="280px", col_width=12,
                                     accent=TABS["contacts"]["bg"],
                                 ),
@@ -793,7 +774,23 @@ app.layout = dbc.Container(fluid=True, style={
                                 ),
                             ]),
 
-                            # Ligne 3 : polydispersité → absorption
+                            # Ligne 3 : validation modèle JCA
+                            dbc.Row(className="px-1 g-3", children=[
+                                graph_card(
+                                    "graph-predictions",
+                                    "Validation du modèle — résistivité prédite vs mesurée",
+                                    "Tran et al. (2024) proposent un modèle semi-analytique qui prédit la résistivité "
+                                    "à partir de la microstructure (diamètre, porosité, orientation). "
+                                    "Ce graphique montre à quel point les prédictions collent aux mesures réelles.",
+                                    "Points proches de la diagonale = modèle précis. "
+                                    "Points au-dessus = sous-estimation. En dessous = surestimation. "
+                                    "Chaque point = un échantillon, coloré par matériau.",
+                                    height="310px", col_width=12,
+                                    accent=TABS["acoustics"]["bg"],
+                                ),
+                            ]),
+
+                            # Ligne 4 : polydispersité → absorption
                             dbc.Row(className="px-1 g-3", children=[
                                 graph_card(
                                     "graph-cv-absorption",
@@ -812,14 +809,14 @@ app.layout = dbc.Container(fluid=True, style={
                             dbc.Row(className="px-1 g-3", children=[
                                 graph_card(
                                     "graph-jca-radar",
-                                    "Paramètres de transport JCA — comparaison par matériau",
-                                    "Tran et al. (2024) relient les 4 paramètres macroscopiques du modèle "
-                                    "Johnson-Champoux-Allard à la microstructure fibreuse. "
-                                    "Ce graphique radar compare les 4 paramètres normalisés par matériau "
-                                    "(valeur 1 = maximum observé dans les données).",
-                                    "Surface large = paramètres élevés dans toutes les gammes de fréquences. "
-                                    "Forme asymétrique = comportement acoustique anisotrope entre basse et haute fréquence. "
-                                    "σ (résistivité) gouverne les basses fréquences, Λ et Λ' les hautes.",
+                                    "Longueurs caractéristiques Λ, Λ' vs diamètre moyen (Tran et al., 2024)",
+                                    "Tran et al. (2024) montrent que la longueur visqueuse Λ est gouvernée "
+                                    "par le diamètre pondéré Div (hautes fréquences), et Λ' par le diamètre "
+                                    "thermique. Ce graphique révèle la relation directe entre morphologie "
+                                    "des fibres et paramètres de transport acoustique.",
+                                    "Chaque point = un échantillon. La tendance croissante confirme que les "
+                                    "fibres plus épaisses produisent des longueurs caractéristiques plus grandes "
+                                    "— et donc une absorption décalée vers les basses fréquences.",
                                     height="340px", col_width=12,
                                     accent=TABS["acoustics"]["bg"],
                                 ),
@@ -920,17 +917,20 @@ def _boxplot(df, y_col, y_title="", unit=""):
     Output("graph-length",           "figure"),
     Output("graph-orientation",      "figure"),
     Output("graph-curvature",        "figure"),
-    Output("graph-cv-diameter",      "figure"),
     Output("graph-contact-area",     "figure"),
     Output("graph-density-porosity", "figure"),
     Output("graph-angle-contact",    "figure"),
     Output("graph-resistivity",      "figure"),
     Output("graph-absorption-ranking", "figure"),
     Output("graph-cv-absorption",    "figure"),
-    Output("graph-diameter-kde",     "figure"),
-    Output("graph-dv-div",           "figure"),
-    Output("graph-jca-radar",        "figure"),
-    Output("acou-data-store",        "data"),
+    Output("graph-diameter-kde",       "figure"),
+    Output("graph-dv-div",             "figure"),
+    Output("graph-jca-radar",          "figure"),
+    Output("graph-orientation-polar",  "figure"),
+    Output("graph-slenderness",        "figure"),
+    Output("graph-coordination",       "figure"),
+    Output("graph-predictions",        "figure"),
+    Output("acou-data-store",          "data"),
     Input("mat-vis-store", "data"),
     Input("filter-batch",  "value"),
 )
@@ -1133,33 +1133,6 @@ def update_all(vis_mats, bat_sel):
     else:
         fig_ranking = _empty_fig("Données d'absorption insuffisantes pour comparer les matériaux")
 
-    # ── Polydispersité CV% par matériau (Tran et al., 2024) ──────────────
-    fig_cv = go.Figure()
-    if not samp_f.empty and _has(samp_f, "std_diameter_um", "mean_diameter_um", "material"):
-        cv_df = (
-            samp_f.assign(cv_pct=lambda d: d["std_diameter_um"] / d["mean_diameter_um"] * 100)
-            .groupby("material")["cv_pct"].mean()
-            .reset_index()
-            .sort_values("cv_pct", ascending=False)
-        )
-        for i, row in cv_df.iterrows():
-            mat = row["material"]
-            fig_cv.add_trace(go.Bar(
-                x=[mat], y=[row["cv_pct"]],
-                name=mat,
-                marker_color=mat_color(mat),
-                hovertemplate=f"<b>{mat}</b><br>CV% = %{{y:.1f}}%<extra></extra>",
-            ))
-        fig_cv.update_layout(
-            **PLOT_LAYOUT,
-            xaxis_title="Matériau",
-            yaxis_title="CV diamètre (%)",
-            showlegend=False,
-        )
-        apply_grid(fig_cv)
-    else:
-        fig_cv = _empty_fig("Colonnes 'std_diameter_um' ou 'mean_diameter_um' non disponibles")
-
     # ── Angle entre fibres en contact (Depriester et al., 2022) ──────────
     fig_ang = go.Figure()
     if not con_f.empty and _has(con_f, "angle_between_fibers", "material"):
@@ -1296,52 +1269,187 @@ def update_all(vis_mats, bat_sel):
     else:
         fig_dvdiv = _empty_fig("Colonnes 'std_diameter_um' ou 'mean_diameter_um' non disponibles")
 
-    # ── Radar paramètres JCA (Tran et al., 2024, Section 3.2) ────────────
+    # ── Longueurs caractéristiques Λ, Λ' vs diamètre moyen (Tran et al., 2024) ──
+    # Tran et al. : Λ ∝ Div (hautes fréquences), Λ' ∝ Div — relation directe morphologie→transport
     fig_jca = go.Figure()
-    _jca_cols   = ["airflow_resistivity", "viscous_length_um", "thermal_length_um", "thermal_permeability"]
-    _jca_labels = ["Résistivité σ", "Longueur\nvisqueuse Λ", "Longueur\nthermique Λ'", "Perm.\nthermique k₀'"]
-    if not aco_f.empty and all(c in aco_f.columns for c in _jca_cols) and _has(aco_f, "material"):
-        maxima = {c: aco_f[c].max() for c in _jca_cols}
-        maxima = {c: v for c, v in maxima.items() if v > 0}
-        mat_means = aco_f.groupby("material")[_jca_cols].mean().reset_index()
-        for i, row in mat_means.iterrows():
-            mat  = row["material"]
-            vals = [row[c] / maxima.get(c, 1) for c in _jca_cols]
-            vals_cl   = vals + [vals[0]]
-            labels_cl = _jca_labels + [_jca_labels[0]]
-            hx = mat_color(mat, i).lstrip("#")
-            fill = f"rgba({int(hx[0:2],16)},{int(hx[2:4],16)},{int(hx[4:6],16)},0.12)"
-            fig_jca.add_trace(go.Scatterpolar(
-                r=vals_cl, theta=labels_cl,
-                mode="lines+markers",
-                name=mat,
-                line=dict(color=mat_color(mat, i), width=2.2),
-                marker=dict(size=6, color=mat_color(mat, i)),
-                fill="toself", fillcolor=fill,
-                hovertemplate=f"<b>{mat}</b><br>%{{theta}}<br>Valeur normalisée : %{{r:.2f}}<extra></extra>",
+    _jca_req = ["mean_diameter_um", "viscous_length_um", "thermal_length_um", "material"]
+    if not aco_f.empty and all(c in aco_f.columns for c in _jca_req):
+        for i, mat in enumerate(sorted(aco_f["material"].dropna().unique())):
+            grp = aco_f[aco_f["material"] == mat].dropna(
+                subset=["mean_diameter_um", "viscous_length_um", "thermal_length_um"]
+            )
+            if grp.empty:
+                continue
+            col = mat_color(mat, i)
+            # Λ visqueuse
+            fig_jca.add_trace(go.Scatter(
+                x=grp["mean_diameter_um"], y=grp["viscous_length_um"],
+                mode="markers", name=f"{mat} — Λ",
+                marker=dict(size=10, color=col, symbol="circle",
+                            line=dict(width=1.5, color=col)),
+                hovertemplate=(
+                    f"<b>{mat}</b><br>"
+                    "Dm = %{x:.1f} µm<br>"
+                    "Λ (visqueuse) = %{y:.1f} µm<extra></extra>"
+                ),
+            ))
+            # Λ' thermique — même couleur, marqueur ouvert
+            fig_jca.add_trace(go.Scatter(
+                x=grp["mean_diameter_um"], y=grp["thermal_length_um"],
+                mode="markers", name=f"{mat} — Λ'",
+                marker=dict(size=10, color=col, symbol="diamond-open",
+                            line=dict(width=2, color=col)),
+                hovertemplate=(
+                    f"<b>{mat}</b><br>"
+                    "Dm = %{x:.1f} µm<br>"
+                    "Λ' (thermique) = %{y:.1f} µm<extra></extra>"
+                ),
+            ))
+        # Ligne de tendance globale sur Λ
+        all_x = aco_f["mean_diameter_um"].dropna()
+        all_y = aco_f["viscous_length_um"].dropna()
+        if len(all_x) > 2 and len(all_y) > 2:
+            import numpy as _np
+            _xy = aco_f[["mean_diameter_um", "viscous_length_um"]].dropna()
+            _px = _np.polyfit(_xy["mean_diameter_um"], _xy["viscous_length_um"], 1)
+            _xs = _np.linspace(_xy["mean_diameter_um"].min(), _xy["mean_diameter_um"].max(), 80)
+            fig_jca.add_trace(go.Scatter(
+                x=_xs, y=_np.polyval(_px, _xs),
+                mode="lines", name="Tendance Λ",
+                line=dict(color="rgba(255,255,255,0.35)", width=1.5, dash="dot"),
+                hoverinfo="skip", showlegend=True,
             ))
         fig_jca.update_layout(
+            **PLOT_LAYOUT,
+            xaxis_title="Diamètre moyen Dm (µm)",
+            yaxis_title="Longueur caractéristique (µm)",
+            showlegend=True,
+            legend=dict(font_size=10, itemsizing="constant"),
+        )
+        apply_grid(fig_jca)
+    else:
+        fig_jca = _empty_fig("Colonnes mean_diameter_um / viscous_length_um / thermal_length_um non disponibles")
+
+    # ── Distribution polaire des orientations θ / ψ ───────────────────────
+    fig_polar = go.Figure()
+    if not fib_f.empty and _has(fib_f, "orientation_theta", "orientation_psi", "material"):
+        for i, mat in enumerate(sorted(fib_f["material"].dropna().unique())):
+            grp = fib_f[fib_f["material"] == mat][["orientation_theta", "orientation_psi"]].dropna()
+            if grp.empty:
+                continue
+            sample_size = min(500, len(grp))
+            grp = grp.sample(sample_size, random_state=42)
+            fig_polar.add_trace(go.Scatterpolar(
+                r=grp["orientation_theta"],
+                theta=grp["orientation_psi"],
+                mode="markers",
+                name=mat,
+                marker=dict(color=mat_color(mat, i), size=4, opacity=0.4),
+                hovertemplate=f"<b>{mat}</b><br>θ = %{{r:.1f}}°<br>ψ = %{{theta:.1f}}°<extra></extra>",
+            ))
+        fig_polar.update_layout(
             paper_bgcolor="white",
             font=dict(family="Inter, system-ui, sans-serif", size=11, color="#334155"),
             polar=dict(
                 radialaxis=dict(
-                    visible=True, range=[0, 1.05],
+                    visible=True, range=[0, 90],
                     tickfont=dict(size=9, color="#64748B"),
                     gridcolor="#CBD5E1", linecolor="#CBD5E1",
+                    title=dict(text="θ (°)", font=dict(size=10)),
                 ),
                 angularaxis=dict(
-                    tickfont=dict(size=11, color="#334155"),
+                    tickfont=dict(size=10, color="#334155"),
                     linecolor="#CBD5E1",
+                    direction="counterclockwise",
                 ),
                 bgcolor="#F8FAFC",
             ),
             showlegend=False,
-            margin=dict(l=80, r=80, t=60, b=60),
-            hoverlabel=dict(bgcolor="#1E293B", bordercolor="#0F172A",
-                            font_size=12, font_color="white"),
+            margin=dict(l=60, r=60, t=40, b=40),
+            hoverlabel=dict(bgcolor="#1E293B", bordercolor="#0F172A", font_size=12, font_color="white"),
         )
     else:
-        fig_jca = _empty_fig("Paramètres JCA (airflow_resistivity, viscous_length_um…) non disponibles")
+        fig_polar = _empty_fig("Colonnes 'orientation_theta' / 'orientation_psi' non disponibles")
+
+    # ── Élancement λ = longueur / diamètre (Depriester et al., 2022) ──────
+    if not fib_f.empty and _has(fib_f, "length_um", "diameter_um", "material"):
+        fc_slend = fib_f.copy()
+        fc_slend["slenderness"] = fc_slend["length_um"] / fc_slend["diameter_um"].replace(0, np.nan)
+        fc_slend = fc_slend.dropna(subset=["slenderness"])
+        fig_slend = _boxplot(fc_slend, "slenderness", "Élancement λ = L/D", "")
+        fig_slend.add_hline(
+            y=3, line_dash="dash", line_color="#EF4444", line_width=1.8,
+            annotation_text="λ = 3 (seuil Depriester et al.)",
+            annotation_position="bottom right",
+            annotation_font=dict(size=10, color="#EF4444"),
+        )
+    else:
+        fig_slend = _empty_fig("Colonnes 'length_um' ou 'diameter_um' non disponibles")
+
+    # ── Degré de coordination — contacts par fibre ────────────────────────
+    fig_coord = go.Figure()
+    if not fib_f.empty and _has(fib_f, "n_contacts", "material"):
+        for i, mat in enumerate(sorted(fib_f["material"].dropna().unique())):
+            vals = fib_f[fib_f["material"] == mat]["n_contacts"].dropna()
+            if vals.empty:
+                continue
+            fig_coord.add_trace(go.Histogram(
+                x=vals, name=mat,
+                marker_color=mat_color(mat, i),
+                marker_line=dict(color="white", width=0.8),
+                opacity=0.55, histnorm="percent",
+                hovertemplate=f"<b>{mat}</b><br>Contacts = %{{x:.0f}}<br>%{{y:.1f}} % des fibres<extra></extra>",
+            ))
+        fig_coord.update_layout(
+            **PLOT_LAYOUT,
+            barmode="overlay",
+            xaxis_title="Nombre de contacts par fibre",
+            yaxis_title="% des fibres",
+            showlegend=False,
+        )
+        apply_grid(fig_coord)
+    else:
+        fig_coord = _empty_fig("Colonne 'n_contacts' non disponible")
+
+    # ── Prédictions vs mesures — résistivité σ (Tran et al., 2024) ────────
+    fig_pred = go.Figure()
+    _pred_col = "predicted_airflow_resistivity"
+    _meas_col = "airflow_resistivity"
+    if not aco_f.empty and _has(aco_f, _meas_col, _pred_col, "material"):
+        valid_pred = aco_f.dropna(subset=[_meas_col, _pred_col])
+        for i, mat in enumerate(sorted(valid_pred["material"].dropna().unique())):
+            grp = valid_pred[valid_pred["material"] == mat]
+            fig_pred.add_trace(go.Scatter(
+                x=grp[_meas_col],
+                y=grp[_pred_col],
+                mode="markers", name=mat,
+                marker=dict(color=mat_color(mat, i), size=11,
+                            line=dict(width=1.5, color="white")),
+                text=grp.get("sample_id"),
+                hovertemplate=(
+                    "<b>Échantillon %{text}</b><br>"
+                    "Mesuré : %{x:,.0f} Pa·s/m²<br>"
+                    "Prédit : %{y:,.0f} Pa·s/m²"
+                    "<extra></extra>"
+                ),
+            ))
+        all_vals = valid_pred[[_meas_col, _pred_col]].values.flatten()
+        vmin, vmax = all_vals.min(), all_vals.max()
+        fig_pred.add_trace(go.Scatter(
+            x=[vmin, vmax], y=[vmin, vmax],
+            mode="lines", name="Prédiction parfaite",
+            line=dict(color="#94A3B8", width=1.8, dash="dash"),
+            hoverinfo="skip", showlegend=False,
+        ))
+        fig_pred.update_layout(
+            **PLOT_LAYOUT,
+            xaxis_title="Résistivité σ mesurée (Pa·s/m²)",
+            yaxis_title="Résistivité σ prédite (Pa·s/m²)",
+            showlegend=False,
+        )
+        apply_grid(fig_pred)
+    else:
+        fig_pred = _empty_fig("Colonne 'predicted_airflow_resistivity' non disponible")
 
     # ── Store données acoustiques ─────────────────────────────────────────
     acou_store = []
@@ -1349,9 +1457,11 @@ def update_all(vis_mats, bat_sel):
         cols = ["sample_id", "material"] + FREQ_COLS
         acou_store = aco_f[cols].dropna(subset=FREQ_COLS).to_dict("records")
 
-    return (kpis, fig_diam, fig_len, fig_ori, fig_curv, fig_cv,
+    return (kpis, fig_diam, fig_len, fig_ori, fig_curv,
             fig_ca, fig_dp, fig_ang, fig_res, fig_ranking, fig_cv_abs,
-            fig_kde, fig_dvdiv, fig_jca, acou_store)
+            fig_kde, fig_dvdiv, fig_jca,
+            fig_polar, fig_slend, fig_coord, fig_pred,
+            acou_store)
 
 
 # ─── Callback : panneau de sélection des échantillons ────────────────────────
@@ -1560,6 +1670,57 @@ def sync_graph_legend_classes(vis_data):
 )
 def reset_filters(_):
     return list(MATERIALS), None, None
+
+
+# ─── Callback : robustesse (données indépendantes) ────────────────────────────
+@app.callback(
+    Output("graph-robustness", "figure"),
+    Input("filter-batch", "value"),
+)
+def update_robustness(bat_sel):
+    rob = _load("robustness.csv")
+    if rob.empty:
+        return _empty_fig("Données de robustesse non disponibles (robustness.csv)")
+
+    if bat_sel and "sample_id" in rob.columns and _has(samples, "batch", "sample_id"):
+        ids_in_batch = samples[samples["batch"].isin(bat_sel)]["sample_id"].tolist()
+        rob = rob[rob["sample_id"].isin(ids_in_batch)]
+
+    if rob.empty:
+        return _empty_fig("Aucune donnée après filtrage")
+
+    fig = go.Figure()
+    palette = ["#3B82F6", "#EF4444", "#22C55E", "#F59E0B", "#8B5CF6", "#10B981"]
+
+    if "noise_level" in rob.columns and "downsampling_factor" in rob.columns and "quality_score" in rob.columns:
+        noise_levels = sorted(rob["noise_level"].dropna().unique())
+        for i, nl in enumerate(noise_levels):
+            grp = rob[rob["noise_level"] == nl].sort_values("downsampling_factor")
+            if grp.empty:
+                continue
+            grp_agg = grp.groupby("downsampling_factor")["quality_score"].mean().reset_index()
+            label = f"Bruit {nl:.0%}" if 0 < nl < 1 else f"Bruit = {nl:.2f}"
+            fig.add_trace(go.Scatter(
+                x=grp_agg["downsampling_factor"],
+                y=grp_agg["quality_score"],
+                mode="lines+markers",
+                name=label,
+                line=dict(color=palette[i % len(palette)], width=2.2),
+                marker=dict(size=8, line=dict(width=1.5, color="white")),
+                hovertemplate=f"<b>{label}</b><br>Sous-éch. × %{{x}}<br>Score qualité = %{{y:.1f}}<extra></extra>",
+            ))
+        fig.update_layout(
+            **PLOT_LAYOUT,
+            xaxis_title="Facteur de sous-échantillonnage",
+            yaxis_title="Score de qualité",
+            legend=_legend_v(),
+            showlegend=len(noise_levels) > 1,
+        )
+        apply_grid(fig)
+    else:
+        fig = _empty_fig("Colonnes 'downsampling_factor', 'noise_level' ou 'quality_score' manquantes")
+
+    return fig
 
 
 if __name__ == "__main__":
