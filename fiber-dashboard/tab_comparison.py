@@ -37,8 +37,15 @@ def get_tab():
                 graph_card(
                     "graph-morph-scatter",
                     "Taille des fibres vs absorption à 1 kHz",
-                    "Est-ce que les fibres plus fines absorbent mieux le son ?",
-                    "Chaque point = un échantillon. Une tendance confirme le lien morphologie/acoustique.",
+                    "Ce graphique montre tous les échantillons acoustiques disponibles. "
+                    "Chaque point représente un échantillon : sa position horizontale = "
+                    "le diamètre moyen de ses fibres, sa position verticale = "
+                    "son absorption à 1 kHz (fréquence de la voix humaine). "
+                    "Si les points forment une tendance (courbe descendante de gauche à droite), "
+                    "cela confirme que les fibres fines absorbent mieux le son.",
+                    "Survolez un point pour voir le matériau et les valeurs exactes. "
+                    "Si les points sont dispersés sans tendance, c'est que d'autres facteurs "
+                    "(longueur, porosité) jouent aussi un rôle.",
                     height="360px", col_width=5,
                     accent=TABS["correlations"]["bg"],
                 ),

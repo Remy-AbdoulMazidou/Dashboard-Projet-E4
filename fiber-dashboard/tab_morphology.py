@@ -49,16 +49,6 @@ def get_tab():
                     accent=TABS["morphology"]["bg"],
                 ),
             ]),
-            dbc.Row(className="px-1 g-3", children=[
-                graph_card(
-                    "graph-orientation-polar",
-                    "Distribution polaire des orientations de fibres (θ, ψ)",
-                    "Orientation 3D des fibres dans le matériau.",
-                    "Points groupés au centre = fibres à plat. Cercle plein = fibres dans tous les sens.",
-                    height="300px", col_width=12,
-                    accent=TABS["morphology"]["bg"],
-                ),
-            ]),
         ])]
     )
 

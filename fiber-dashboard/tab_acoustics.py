@@ -35,8 +35,13 @@ def get_tab():
                 graph_card(
                     "graph-resistivity",
                     "Résistance à l'air vs quantité de vide (porosité)",
-                    "Résistance au passage de l'air selon la densité du matériau.",
-                    "Chaque point = un échantillon. Plus poreux = moins de résistance.",
+                    "Ce graphique montre tous les échantillons analysés : chaque point correspond "
+                    "à un échantillon scanné. On compare leur résistance au passage de l'air (axe vertical) "
+                    "à leur porosité (axe horizontal), c'est-à-dire le pourcentage de vide dans le matériau. "
+                    "Un matériau très poreux laisse passer l'air facilement donc résiste peu — "
+                    "un matériau dense résiste beaucoup. La ligne pointillée montre la tendance générale.",
+                    "Survolez un point pour voir à quel échantillon il correspond. "
+                    "Les échantillons affichés sont ceux sélectionnés via les cases en bas du graphique.",
                     height="310px", col_width=12,
                     accent=TABS["acoustics"]["bg"],
                 ),

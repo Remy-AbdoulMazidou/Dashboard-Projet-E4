@@ -8,4 +8,4 @@ build/
 .DS_Store
 venv/
 .claude/
-docs/
+# docs/ — décommenté pour inclure les fichiers de présentation

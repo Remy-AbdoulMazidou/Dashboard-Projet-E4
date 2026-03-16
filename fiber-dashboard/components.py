@@ -164,16 +164,19 @@ def _absorption_card():
                 }),
             ]),
             html.P(
-                "Chaque courbe montre comment un échantillon absorbe le son selon la fréquence. "
-                "Plus la courbe est haute, meilleure est l'absorption.",
+                "On mesure ici combien de son chaque échantillon absorbe, "
+                "sur 5 fréquences allant des graves (250 Hz) aux aigus (4 000 Hz). "
+                "On teste plusieurs fréquences car un matériau peut très bien absorber les aigus "
+                "mais laisser passer les graves — ou l'inverse.",
                 style={"fontSize": "13px", "color": "#334155",
                        "fontWeight": "500",
                        "lineHeight": "1.65", "marginBottom": "10px", "textAlign": "center"},
             ),
             _read_guide_block(
-                "Choisissez un ou plusieurs échantillons dans la liste à droite. "
-                "Un α proche de 1 = excellent absorbant. Proche de 0 = le son rebondit. "
-                "La fréquence 1 kHz correspond à la voix humaine.",
+                "Axe vertical : α = coefficient d'absorption. "
+                "0 = le son rebondit entièrement. 1 = le son est totalement absorbé. "
+                "Sélectionnez les échantillons à afficher dans la liste à droite. "
+                "Survolez une courbe pour voir les valeurs exactes.",
                 accent,
             ),
             html.Div(style={"display": "flex", "gap": "14px", "alignItems": "stretch"}, children=[

@@ -37,11 +37,6 @@ header = html.Div(style={
     "padding":     "44px 32px 38px 32px",
     "textAlign":   "center",
 }, children=[
-    html.Div("ESIEE PARIS — PROJET E4", style={
-        "color": "#60A5FA", "fontSize": "11px", "fontWeight": 700,
-        "letterSpacing": "0.18em", "textTransform": "uppercase",
-        "marginBottom": "12px",
-    }),
     html.H1("FiberScope", style={
         "color": "white", "fontWeight": 800,
         "fontSize": "44px", "letterSpacing": "-2px",
@@ -78,48 +73,65 @@ header = html.Div(style={
 sidebar = dbc.Row(className="mt-4 mb-3 px-3", children=[
     dbc.Col(dbc.Card(style={
         "borderRadius": "12px", "border": "1px solid #E2E8F0",
-        "boxShadow": "0 2px 6px rgba(0,0,0,0.04)", "backgroundColor": "white",
+        "boxShadow": "0 2px 6px rgba(0,0,0,0.04)", "backgroundColor": "#F8FAFC",
+        "borderLeft": "4px solid #2563EB",
     }, children=[
-        dbc.CardBody(style={"padding": "16px 20px"}, children=[
+        dbc.CardBody(style={"padding": "16px 24px"}, children=[
             html.P(
-                "Filtrez les données par matériau et par lot de fabrication. "
-                "Tous les graphiques se mettent à jour instantanément.",
-                style={"fontSize": "12px", "color": "#64748B", "marginBottom": "14px"},
+                "FiberScope est un outil de visualisation développé dans le cadre du projet E4. "
+                "Il permet d'analyser et de comparer la microstructure de différents matériaux fibreux "
+                "(laine de verre, fibres de carbone, nylon, etc.) à partir d'images 3D obtenues par scanner à rayons X. "
+                "L'objectif est de comprendre comment la forme des fibres — leur taille, leur longueur, "
+                "leur orientation — influence la capacité du matériau à absorber le son. "
+                "Chaque graphique est interactif : vous pouvez survoler les données, "
+                "filtrer par matériau et explorer les résultats.",
+                style={"fontSize": "13px", "color": "#0F172A",
+                       "marginBottom": "16px", "lineHeight": "1.8"},
+            ),
+            html.Hr(style={"borderColor": "#E2E8F0", "margin": "0 0 14px 0"}),
+            html.P(
+                "Ce dashboard est alimenté par 4 fichiers CSV produits par l'analyse "
+                "d'images 3D (microtomographie X) de matériaux fibreux.",
+                style={"fontSize": "12.5px", "color": "#334155",
+                       "marginBottom": "12px", "lineHeight": "1.7", "fontWeight": "500"},
             ),
             html.Div(style={
-                "display": "flex", "gap": "16px",
-                "alignItems": "flex-end", "flexWrap": "wrap",
+                "display": "grid",
+                "gridTemplateColumns": "repeat(4, 1fr)",
+                "gap": "10px",
             }, children=[
-                html.Div(style={"flex": "2 1 180px"}, children=[
-                    html.Label("Matériau", style={
-                        "fontWeight": 700, "fontSize": "12px",
-                        "color": "#334155", "marginBottom": "5px", "display": "block",
-                    }),
-                    dcc.Dropdown(
-                        id="filter-material",
-                        options=[{"label": m, "value": m} for m in MATERIALS],
-                        multi=True, placeholder="Tous les matériaux",
-                        style={"fontSize": "13px"},
-                    ),
+                html.Div(style={
+                    "backgroundColor": "white", "borderRadius": "8px",
+                    "padding": "10px 14px", "border": "1px solid #E2E8F0",
+                }, children=[
+                    html.Div("samples.csv", style={"fontWeight": 700, "fontSize": "12px", "color": "#2563EB", "marginBottom": "4px"}),
+                    html.Div("1 ligne par échantillon scanné. Contient la porosité, le diamètre moyen des fibres, leur orientation et leur élancement.",
+                             style={"fontSize": "11px", "color": "#64748B", "lineHeight": "1.55"}),
                 ]),
-                html.Div(style={"flex": "2 1 180px"}, children=[
-                    html.Label("Lot de fabrication", style={
-                        "fontWeight": 700, "fontSize": "12px",
-                        "color": "#334155", "marginBottom": "5px", "display": "block",
-                    }),
-                    dcc.Dropdown(
-                        id="filter-batch",
-                        options=[{"label": b, "value": b} for b in BATCHES],
-                        multi=True, placeholder="Tous les lots",
-                        style={"fontSize": "13px"},
-                    ),
+                html.Div(style={
+                    "backgroundColor": "white", "borderRadius": "8px",
+                    "padding": "10px 14px", "border": "1px solid #E2E8F0",
+                }, children=[
+                    html.Div("fibers.csv", style={"fontWeight": 700, "fontSize": "12px", "color": "#2563EB", "marginBottom": "4px"}),
+                    html.Div("1 ligne par fibre détectée (~5 000 fibres). Contient le diamètre, la longueur, l'orientation et la courbure de chaque fibre.",
+                             style={"fontSize": "11px", "color": "#64748B", "lineHeight": "1.55"}),
                 ]),
-                dbc.Button("Tout afficher", id="btn-reset", style={
-                    "border": "1px solid #CBD5E1", "backgroundColor": "white",
-                    "color": "#475569", "fontWeight": 700, "fontSize": "12px",
-                    "whiteSpace": "nowrap", "borderRadius": "8px",
-                    "padding": "9px 18px", "flexShrink": 0, "alignSelf": "flex-end",
-                }),
+                html.Div(style={
+                    "backgroundColor": "white", "borderRadius": "8px",
+                    "padding": "10px 14px", "border": "1px solid #E2E8F0",
+                }, children=[
+                    html.Div("contacts.csv", style={"fontWeight": 700, "fontSize": "12px", "color": "#2563EB", "marginBottom": "4px"}),
+                    html.Div("1 ligne par contact entre deux fibres (~3 000 contacts). Contient la surface de contact et l'angle entre les fibres.",
+                             style={"fontSize": "11px", "color": "#64748B", "lineHeight": "1.55"}),
+                ]),
+                html.Div(style={
+                    "backgroundColor": "white", "borderRadius": "8px",
+                    "padding": "10px 14px", "border": "1px solid #E2E8F0",
+                }, children=[
+                    html.Div("acoustic_thermal.csv", style={"fontWeight": 700, "fontSize": "12px", "color": "#2563EB", "marginBottom": "4px"}),
+                    html.Div("1 ligne par échantillon. Contient les mesures d'absorption sonore à 5 fréquences et les paramètres du modèle acoustique.",
+                             style={"fontSize": "11px", "color": "#64748B", "lineHeight": "1.55"}),
+                ]),
             ]),
         ]),
     ]))
@@ -165,51 +177,44 @@ app.layout = dbc.Container(fluid=True, style={
     Output("row-kpis",                "children"),
     Output("graph-diameter",          "figure"),
     Output("graph-diameter-kde",      "figure"),
-    Output("graph-orientation-polar", "figure"),
     Output("graph-resistivity",       "figure"),
     Output("graph-summary-table",     "figure"),
     Output("graph-ranking-bar",       "figure"),
     Output("graph-morph-scatter",     "figure"),
     Output("acou-data-store",         "data"),
-    Input({"type": "mat-store", "graph": "graph-diameter"},          "data"),
-    Input({"type": "mat-store", "graph": "graph-diameter-kde"},      "data"),
-    Input({"type": "mat-store", "graph": "graph-orientation-polar"}, "data"),
-    Input({"type": "mat-store", "graph": "graph-resistivity"},       "data"),
-    Input("filter-batch",  "value"),
+    Input({"type": "mat-store", "graph": "graph-diameter"},     "data"),
+    Input({"type": "mat-store", "graph": "graph-diameter-kde"}, "data"),
+    Input({"type": "mat-store", "graph": "graph-resistivity"},  "data"),
 )
-def update_all(mats_diam, mats_kde, mats_polar, mats_res, bat_sel):
-    ids_diam,  samp_diam  = _filter_ids(mats_diam, bat_sel)
-    ids_kde,   _          = _filter_ids(mats_kde, bat_sel)
-    ids_polar, _          = _filter_ids(mats_polar, bat_sel)
-    ids_res,   samp_res   = _filter_ids(mats_res, bat_sel)
-    ids_all,   samp_all   = _filter_ids(MATERIALS, bat_sel)
+def update_all(mats_diam, mats_kde, mats_res):
+    ids_diam, _        = _filter_ids(mats_diam, None)
+    ids_kde,  _        = _filter_ids(mats_kde,  None)
+    ids_res,  samp_res = _filter_ids(mats_res,  None)
+    ids_all,  samp_all = _filter_ids(MATERIALS, None)
 
-    fib_diam  = _sub(fibers,   ids_diam)
-    fib_kde   = _sub(fibers,   ids_kde)
-    fib_polar = _sub(fibers,   ids_polar)
-    aco_res   = _sub(acoustic, ids_res)
-    samp_f    = samp_all
-    fib_f     = _sub(fibers,   ids_all)
-    aco_f     = _sub(acoustic, ids_all)
-
+    fib_diam = _sub(fibers,   ids_diam)
+    fib_kde  = _sub(fibers,   ids_kde)
+    aco_res  = _sub(acoustic, ids_res)
+    samp_f   = samp_all
+    fib_f    = _sub(fibers,   ids_all)
+    aco_f    = _sub(acoustic, ids_all)
 
     kpis = tab_overview.build_kpis(samp_f, fib_f, aco_f)
 
     fig_diam    = tab_morphology.build_diameter(fib_diam)
     fig_kde     = tab_morphology.build_kde(fib_kde)
-    fig_polar   = tab_morphology.build_polar(fib_polar)
     fig_res     = tab_acoustics.build_resistivity(samp_res, aco_res)
     fig_summary = tab_overview.build_summary_table(samp_f, aco_f)
     fig_ranking = tab_comparison.build_ranking(aco_f)
     fig_scatter = tab_comparison.build_scatter(aco_f)
 
-    # préparation des données pour le graphique d'absorption
+    # données pour le graphique d'absorption (onglet Acoustique)
     acou_store = []
     if not aco_f.empty and all(c in aco_f.columns for c in FREQ_COLS) and _has(aco_f, "sample_id", "material"):
         cols = ["sample_id", "material"] + FREQ_COLS
         acou_store = aco_f[cols].dropna(subset=FREQ_COLS).to_dict("records")
 
-    return (kpis, fig_diam, fig_kde, fig_polar, fig_res, fig_summary, fig_ranking, fig_scatter, acou_store)
+    return (kpis, fig_diam, fig_kde, fig_res, fig_summary, fig_ranking, fig_scatter, acou_store)
 
 
 # callback : panneau de sélection des échantillons acoustiques
@@ -392,70 +397,6 @@ def sync_per_graph_classes(vis_data):
     )
     return mat_classes, [all_class] * len(ctx.outputs_list[1])
 
-
-# callback : réinitialisation des filtres
-@app.callback(
-    Output("mat-vis-store",   "data",  allow_duplicate=True),
-    Output("filter-batch",    "value"),
-    Output("filter-material", "value"),
-    Input("btn-reset", "n_clicks"),
-    prevent_initial_call=True,
-)
-def reset_filters(_):
-    return list(MATERIALS), None, None
-
-
-# callback : graphique de robustesse (données independantes)
-@app.callback(
-    Output("graph-robustness", "figure"),
-    Input("filter-batch", "value"),
-)
-def update_robustness(bat_sel):
-    from data import _load
-    rob = _load("robustness.csv")
-    if rob.empty:
-        return _empty_fig("Données de robustesse non disponibles (robustness.csv)")
-
-    if bat_sel and "sample_id" in rob.columns and _has(samples, "batch", "sample_id"):
-        ids_in_batch = samples[samples["batch"].isin(bat_sel)]["sample_id"].tolist()
-        rob = rob[rob["sample_id"].isin(ids_in_batch)]
-
-    if rob.empty:
-        return _empty_fig("Aucune donnée après filtrage")
-
-    fig = go.Figure()
-    palette = ["#3B82F6", "#EF4444", "#22C55E", "#F59E0B", "#8B5CF6", "#10B981"]
-
-    if "noise_level" in rob.columns and "downsampling_factor" in rob.columns and "quality_score" in rob.columns:
-        noise_levels = sorted(rob["noise_level"].dropna().unique())
-        for i, nl in enumerate(noise_levels):
-            grp = rob[rob["noise_level"] == nl].sort_values("downsampling_factor")
-            if grp.empty:
-                continue
-            grp_agg = grp.groupby("downsampling_factor")["quality_score"].mean().reset_index()
-            label = f"Bruit {nl:.0%}" if 0 < nl < 1 else f"Bruit = {nl:.2f}"
-            fig.add_trace(go.Scatter(
-                x=grp_agg["downsampling_factor"],
-                y=grp_agg["quality_score"],
-                mode="lines+markers",
-                name=label,
-                line=dict(color=palette[i % len(palette)], width=2.2),
-                marker=dict(size=8, line=dict(width=1.5, color="white")),
-                hovertemplate=f"<b>{label}</b><br>Sous-éch. × %{{x}}<br>Score qualité = %{{y:.1f}}<extra></extra>",
-            ))
-        from config import _legend_v
-        fig.update_layout(
-            **PLOT_LAYOUT,
-            xaxis_title="Facteur de sous-échantillonnage",
-            yaxis_title="Score de qualité",
-            legend=_legend_v(),
-            showlegend=len(noise_levels) > 1,
-        )
-        apply_grid(fig)
-    else:
-        fig = _empty_fig("Colonnes 'downsampling_factor', 'noise_level' ou 'quality_score' manquantes")
-
-    return fig
 
 
 if __name__ == "__main__":

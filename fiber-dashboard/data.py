@@ -49,7 +49,7 @@ def _empty_fig(msg="Données non disponibles"):
     return apply_grid(fig)
 
 def _filter_ids(mat_list, bat_sel):
-    sel = mat_list or MATERIALS
+    sel = mat_list if mat_list is not None else MATERIALS
     if samples.empty:
         return [], pd.DataFrame()
     mask = samples["material"].isin(sel)
