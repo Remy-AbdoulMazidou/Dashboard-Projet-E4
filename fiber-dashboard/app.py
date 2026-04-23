@@ -69,7 +69,7 @@ header = html.Div(style={
     }) if MATERIALS else html.Span(),
 ])
 
-# barre de filtres
+# barre de présentation du projet
 sidebar = dbc.Row(className="mt-4 mb-3 px-3", children=[
     dbc.Col(dbc.Card(style={
         "borderRadius": "12px", "border": "1px solid #E2E8F0",
@@ -82,7 +82,7 @@ sidebar = dbc.Row(className="mt-4 mb-3 px-3", children=[
                 "Il permet d'analyser et de comparer la microstructure de différents matériaux fibreux "
                 "(laine de verre, fibres de carbone, nylon, etc.) à partir d'images 3D obtenues par scanner à rayons X. "
                 "L'objectif est de comprendre comment la forme des fibres — leur taille, leur longueur, "
-                "leur orientation — influence la capacité du matériau à absorber le son. "
+                "leur orientation — influence la capacité du matériau à absorber le son et à isoler thermiquement. "
                 "Chaque graphique est interactif : vous pouvez survoler les données, "
                 "filtrer par matériau et explorer les résultats.",
                 style={"fontSize": "13px", "color": "#0F172A",
@@ -113,7 +113,7 @@ sidebar = dbc.Row(className="mt-4 mb-3 px-3", children=[
                     "padding": "10px 14px", "border": "1px solid #E2E8F0",
                 }, children=[
                     html.Div("fibers.csv", style={"fontWeight": 700, "fontSize": "12px", "color": "#2563EB", "marginBottom": "4px"}),
-                    html.Div("1 ligne par fibre détectée (~5 000 fibres). Contient le diamètre, la longueur, l'orientation et la courbure de chaque fibre.",
+                    html.Div("1 ligne par fibre détectée (~5 000 fibres). Contient le diamètre, la longueur, l'orientation θ et ψ, et la courbure de chaque fibre.",
                              style={"fontSize": "11px", "color": "#64748B", "lineHeight": "1.55"}),
                 ]),
                 html.Div(style={
@@ -129,7 +129,7 @@ sidebar = dbc.Row(className="mt-4 mb-3 px-3", children=[
                     "padding": "10px 14px", "border": "1px solid #E2E8F0",
                 }, children=[
                     html.Div("acoustic_thermal.csv", style={"fontWeight": 700, "fontSize": "12px", "color": "#2563EB", "marginBottom": "4px"}),
-                    html.Div("1 ligne par échantillon. Contient les mesures d'absorption sonore à 5 fréquences et les paramètres du modèle acoustique.",
+                    html.Div("1 ligne par échantillon. Contient l'absorption sonore à 5 fréquences et les paramètres JCAL (Λ, Λ', résistivité).",
                              style={"fontSize": "11px", "color": "#64748B", "lineHeight": "1.55"}),
                 ]),
             ]),
@@ -172,7 +172,7 @@ app.layout = dbc.Container(fluid=True, style={
 ])
 
 
-# callback principal : met à jour tous les graphiques selon les filtres
+# callback principal : met à jour tous les graphiques selon les filtres matériaux
 @app.callback(
     Output("row-kpis",                "children"),
     Output("graph-diameter",          "figure"),
@@ -182,31 +182,56 @@ app.layout = dbc.Container(fluid=True, style={
     Output("graph-ranking-bar",       "figure"),
     Output("graph-morph-scatter",     "figure"),
     Output("acou-data-store",         "data"),
+    # nouveaux graphiques
+    Output("graph-polar",             "figure"),
+    Output("graph-angles",            "figure"),
+    Output("graph-jcal",              "figure"),
+    Output("graph-thermal",           "figure"),
+    # inputs existants
     Input({"type": "mat-store", "graph": "graph-diameter"},     "data"),
     Input({"type": "mat-store", "graph": "graph-diameter-kde"}, "data"),
     Input({"type": "mat-store", "graph": "graph-resistivity"},  "data"),
+    # inputs nouveaux graphiques
+    Input({"type": "mat-store", "graph": "graph-polar"},        "data"),
+    Input({"type": "mat-store", "graph": "graph-angles"},       "data"),
+    Input({"type": "mat-store", "graph": "graph-jcal"},         "data"),
+    Input({"type": "mat-store", "graph": "graph-thermal"},      "data"),
 )
-def update_all(mats_diam, mats_kde, mats_res):
-    ids_diam, _        = _filter_ids(mats_diam, None)
-    ids_kde,  _        = _filter_ids(mats_kde,  None)
-    ids_res,  samp_res = _filter_ids(mats_res,  None)
-    ids_all,  samp_all = _filter_ids(MATERIALS, None)
+def update_all(mats_diam, mats_kde, mats_res,
+               mats_polar, mats_angles, mats_jcal, mats_thermal):
+    # filtres par graphique
+    ids_diam,    _          = _filter_ids(mats_diam,    None)
+    ids_kde,     _          = _filter_ids(mats_kde,     None)
+    ids_res,     samp_res   = _filter_ids(mats_res,     None)
+    ids_all,     samp_all   = _filter_ids(MATERIALS,    None)
+    ids_polar,   _          = _filter_ids(mats_polar,   None)
+    ids_angles,  _          = _filter_ids(mats_angles,  None)
+    ids_jcal,    _          = _filter_ids(mats_jcal,    None)
+    _,           samp_th    = _filter_ids(mats_thermal, None)
 
-    fib_diam = _sub(fibers,   ids_diam)
-    fib_kde  = _sub(fibers,   ids_kde)
-    aco_res  = _sub(acoustic, ids_res)
-    samp_f   = samp_all
-    fib_f    = _sub(fibers,   ids_all)
-    aco_f    = _sub(acoustic, ids_all)
+    # sous-ensembles de données filtrés
+    fib_diam   = _sub(fibers,   ids_diam)
+    fib_kde    = _sub(fibers,   ids_kde)
+    fib_polar  = _sub(fibers,   ids_polar)
+    fib_angles = _sub(fibers,   ids_angles)
+    aco_res    = _sub(acoustic, ids_res)
+    aco_jcal   = _sub(acoustic, ids_jcal)
+    samp_f     = samp_all
+    fib_f      = _sub(fibers,   ids_all)
+    aco_f      = _sub(acoustic, ids_all)
 
-    kpis = tab_overview.build_kpis(samp_f, fib_f, aco_f)
-
+    # construction des figures
+    kpis        = tab_overview.build_kpis(samp_f, fib_f, aco_f)
     fig_diam    = tab_morphology.build_diameter(fib_diam)
     fig_kde     = tab_morphology.build_kde(fib_kde)
+    fig_polar   = tab_morphology.build_polar(fib_polar)
+    fig_angles  = tab_morphology.build_angles(fib_angles)
     fig_res     = tab_acoustics.build_resistivity(samp_res, aco_res)
+    fig_jcal    = tab_acoustics.build_jcal(aco_jcal)
     fig_summary = tab_overview.build_summary_table(samp_f, aco_f)
     fig_ranking = tab_comparison.build_ranking(aco_f)
     fig_scatter = tab_comparison.build_scatter(aco_f)
+    fig_thermal = tab_comparison.build_thermal(samp_th)
 
     # données pour le graphique d'absorption (onglet Acoustique)
     acou_store = []
@@ -214,7 +239,11 @@ def update_all(mats_diam, mats_kde, mats_res):
         cols = ["sample_id", "material"] + FREQ_COLS
         acou_store = aco_f[cols].dropna(subset=FREQ_COLS).to_dict("records")
 
-    return (kpis, fig_diam, fig_kde, fig_res, fig_summary, fig_ranking, fig_scatter, acou_store)
+    return (
+        kpis, fig_diam, fig_kde, fig_res, fig_summary,
+        fig_ranking, fig_scatter, acou_store,
+        fig_polar, fig_angles, fig_jcal, fig_thermal,
+    )
 
 
 # callback : panneau de sélection des échantillons acoustiques
@@ -396,7 +425,6 @@ def sync_per_graph_classes(vis_data):
         else "mat-cb-item mat-cb-item--off"
     )
     return mat_classes, [all_class] * len(ctx.outputs_list[1])
-
 
 
 if __name__ == "__main__":
