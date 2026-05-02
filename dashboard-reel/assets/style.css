@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap');
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -8,7 +8,7 @@
 
 body {
   margin: 0;
-  background: #FAFAFA;
+  background: #F8F9FA;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: #18181B;
 }
@@ -24,67 +24,86 @@ body {
 .dash-tab    { border: none !important; border-radius: 0 !important; background: transparent !important; }
 
 /* ── Scrollbar ──────────────────────────────────── */
-::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #E4E4E7; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #A1A1AA; }
 
-/* ── Plotly ─────────────────────────────────────── */
+/* ── Plotly — masquer modebar, pas de border-radius ── */
 .modebar, .modebar-container { display: none !important; }
-.js-plotly-plot .plotly    { border-radius: 0; }
+.js-plotly-plot .plotly { border-radius: 0; }
 
-/* ── Radio custom ───────────────────────────────── */
-.method-toggle { display: inline-flex; gap: 0; border: 1px solid #E4E4E7; border-radius: 8px; overflow: hidden; }
+/* ── Sélecteur radio "segmented control" ────────── */
+.method-toggle {
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid #E4E4E7;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #FFFFFF;
+}
 .method-toggle label {
   cursor: pointer;
-  padding: 7px 18px;
-  font-size: 0.8rem;
+  padding: 6px 16px;
+  font-size: 0.78rem;
   font-weight: 500;
   color: #71717A;
-  background: #FFFFFF;
+  background: transparent;
   border-right: 1px solid #E4E4E7;
   transition: background 0.12s, color 0.12s;
   user-select: none;
   display: inline-block;
+  letter-spacing: -0.01em;
 }
 .method-toggle label:last-child { border-right: none; }
-.method-toggle label:hover      { background: #F4F4F5; color: #27272A; }
+.method-toggle label:hover      { background: #F4F4F5; color: #18181B; }
 .method-toggle input            { display: none; }
 
-/* ── Table comparaison ──────────────────────────── */
+/* ── Tableau comparaison (classe legacy) ────────── */
 .cmp-table { width: 100%; border-collapse: collapse; }
 .cmp-table th {
-  font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.07em; color: #A1A1AA;
-  padding: 0 16px 12px 16px;
-  border-bottom: 1px solid #E4E4E7;
+  font-size: 0.67rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.07em; color: #71717A;
+  padding: 0 16px 11px 16px;
+  border-bottom: 2px solid #E4E4E7;
   text-align: left;
 }
 .cmp-table td {
-  padding: 13px 16px;
-  font-size: 0.83rem;
+  padding: 12px 16px;
+  font-size: 0.82rem;
   border-bottom: 1px solid #F4F4F5;
   vertical-align: middle;
 }
 .cmp-table tr:last-child td { border-bottom: none; }
-.cmp-table tr:hover td      { background: #FAFAFA; }
+.cmp-table tr:hover td      { background: #F9FAFB; }
 
 /* ── Badges ─────────────────────────────────────── */
 .badge {
   display: inline-flex; align-items: center;
-  font-size: 0.7rem; font-weight: 600;
-  border-radius: 6px; padding: 3px 10px;
-  white-space: nowrap;
+  font-size: 0.69rem; font-weight: 600;
+  border-radius: 6px; padding: 2px 9px;
+  white-space: nowrap; letter-spacing: 0.01em;
 }
 .badge-ok    { color: #059669; background: #ECFDF5; }
 .badge-warn  { color: #D97706; background: #FFFBEB; }
 .badge-diff  { color: #E11D48; background: #FFF1F2; }
 .badge-info  { color: #71717A; background: #F4F4F5; }
 
-/* ── Hover cards ────────────────────────────────── */
+/* ── Hover cards — shadcn/ui pattern ─────────────── */
 .hover-card {
-  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 .hover-card:hover {
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.09), 0 8px 20px rgba(0,0,0,0.09) !important;
+  border-color: #A1A1AA !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
   transform: translateY(-2px);
+}
+
+/* ── Sélection focus accessible ──────────────────── */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #6366F1;
+  outline-offset: 2px;
+  border-radius: 4px;
 }

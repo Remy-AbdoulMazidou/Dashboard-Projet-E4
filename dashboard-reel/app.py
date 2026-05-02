@@ -153,27 +153,27 @@ print(f"   KS orient p={KS_ORIENT.pvalue:.4f}  ·  KS diam p={KS_DIAM.pvalue:.4f
 
 def lay(h=300, lg=False, **kw):
     d = dict(
-        paper_bgcolor=CARD, plot_bgcolor='#FAFBFC',
+        paper_bgcolor=CARD, plot_bgcolor=CARD,
         font=dict(family=FONT, size=11, color=ZN500),
         height=h, showlegend=lg,
-        margin=dict(l=52, r=16, t=18, b=46),
+        margin=dict(l=54, r=18, t=20, b=48),
         xaxis=dict(showgrid=False, linecolor=ZN200, zeroline=False,
                    tickfont=dict(size=10, color=ZN500, family=FONT)),
-        yaxis=dict(gridcolor=ZN100, linecolor=ZN200, zeroline=False,
+        yaxis=dict(gridcolor='#F4F4F5', linecolor='transparent', zeroline=False,
                    tickfont=dict(size=10, color=ZN500, family=FONT)),
         legend=dict(orientation='h', yanchor='bottom', y=1.04, xanchor='left', x=0,
                     bgcolor='rgba(0,0,0,0)', font=dict(size=10, color=ZN700, family=FONT)),
         hoverlabel=dict(bgcolor=ZN900, bordercolor=ZN900,
-                        font=dict(color='white', size=12, family=FONT), namelength=-1),
+                        font=dict(color='white', size=11, family=FONT), namelength=-1),
     )
     d.update(kw)
     return d
 
 
-def card(*children, p='22px 24px', mb='14px', hover=True):
+def card(*children, p='20px 24px', mb='14px', hover=True):
     base = {
-        'background': CARD, 'borderRadius': '14px',
-        'boxShadow': '0 0 0 1px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04)',
+        'background': CARD, 'borderRadius': '10px',
+        'border': f'1px solid {ZN200}',
         'padding': p, 'marginBottom': mb,
     }
     return html.Div(list(children), style=base, className='hover-card' if hover else '')
@@ -214,9 +214,10 @@ def chart_head(title, subtitle=None, question=None):
 
 def insight(text, color=GREEN, bg='#F0FDF4', border='#D1FAE5'):
     return html.Div(text, style={
-        'background': bg, 'border': f'1px solid {border}', 'borderRadius': '10px',
-        'padding': '14px 18px', 'marginBottom': '16px',
-        'fontSize': '0.84rem', 'fontWeight': '500', 'color': color, 'lineHeight': '1.55',
+        'borderLeft': f'3px solid {border}',
+        'borderRadius': '0 6px 6px 0',
+        'padding': '10px 14px', 'marginBottom': '16px',
+        'fontSize': '0.82rem', 'fontWeight': '500', 'color': color, 'lineHeight': '1.6',
     })
 
 
@@ -288,9 +289,10 @@ def moments_table_cmp(arr_aa, arr_nol, unit='', fmt='.1f'):
     s_nol = r(arr_nol)
 
     th_s = {
-        'fontSize': '0.66rem', 'fontWeight': '700', 'textTransform': 'uppercase',
-        'letterSpacing': '0.07em', 'color': 'white', 'padding': '8px 12px',
-        'background': ZN800, 'textAlign': 'left', 'whiteSpace': 'nowrap',
+        'fontSize': '0.65rem', 'fontWeight': '600', 'textTransform': 'uppercase',
+        'letterSpacing': '0.07em', 'color': ZN500, 'padding': '8px 12px',
+        'background': ZN100, 'textAlign': 'left', 'whiteSpace': 'nowrap',
+        'borderBottom': f'2px solid {ZN200}',
     }
     td_s  = {'padding': '7px 12px', 'fontSize': '0.79rem', 'borderBottom': f'1px solid {ZN200}',
              'fontVariantNumeric': 'tabular-nums', 'color': ZN700}
@@ -333,51 +335,53 @@ def moments_table_cmp(arr_aa, arr_nol, unit='', fmt='.1f'):
 
 def verdict_card(icon, title, detail, status='ok'):
     colors = {
-        'ok':   {'bg': '#F0FDF4', 'border': '#10B981', 'icon': GREEN,  'title': '#065F46'},
-        'warn': {'bg': '#FFFBEB', 'border': '#F59E0B', 'icon': AMBER,  'title': '#92400E'},
-        'diff': {'bg': '#FFF1F2', 'border': '#E11D48', 'icon': RED,    'title': '#9F1239'},
+        'ok':   {'bg': '#F0FDF4', 'border': '#10B981', 'title': '#065F46'},
+        'warn': {'bg': '#FFFBEB', 'border': '#F59E0B', 'title': '#92400E'},
+        'diff': {'bg': '#FFF1F2', 'border': '#E11D48', 'title': '#9F1239'},
     }
     c = colors.get(status, colors['ok'])
     return html.Div([
-        html.Div(icon, style={'fontSize': '1.6rem', 'marginBottom': '10px'}),
-        html.Div(title, style={'fontSize': '0.84rem', 'fontWeight': '700',
-                               'color': c['title'], 'marginBottom': '6px'}),
-        html.Div(detail, style={'fontSize': '0.76rem', 'color': ZN500, 'lineHeight': '1.5'}),
+        html.Div([
+            html.Span(icon, style={'marginRight': '7px', 'fontSize': '0.9rem'}),
+            html.Span(title, style={'fontSize': '0.81rem', 'fontWeight': '700', 'color': c['title']}),
+        ], style={'display': 'flex', 'alignItems': 'center', 'marginBottom': '7px'}),
+        html.Div(detail, style={'fontSize': '0.74rem', 'color': ZN500, 'lineHeight': '1.55'}),
     ], style={
-        'background': c['bg'], 'borderRadius': '12px', 'padding': '20px 18px',
-        'borderTop': f'4px solid {c["border"]}',
-        'boxShadow': '0 0 0 1px rgba(0,0,0,0.05)',
-        'transition': 'transform 0.18s ease, box-shadow 0.18s ease',
+        'background': c['bg'], 'borderRadius': '8px', 'padding': '14px 16px',
+        'borderTop': f'1px solid {ZN200}',
+        'borderRight': f'1px solid {ZN200}',
+        'borderBottom': f'1px solid {ZN200}',
+        'borderLeft': f'3px solid {c["border"]}',
     }, className='hover-card')
 
 
 def kpi_dual(label, v_aa, v_nol, badge_text, badge_cls='badge-info', delta_pct=None):
     return html.Div([
         html.Div(label.upper(), style={
-            'fontSize': '0.66rem', 'fontWeight': '700',
-            'color': ZN400, 'letterSpacing': '0.09em', 'marginBottom': '14px',
+            'fontSize': '0.66rem', 'fontWeight': '600',
+            'color': ZN400, 'letterSpacing': '0.08em', 'marginBottom': '12px',
         }),
         html.Div([
             html.Div([
                 html.Div(str(v_aa), className='tabnum', style={
-                    'fontSize': '2rem', 'fontWeight': '800',
-                    'color': INDIGO, 'lineHeight': '1', 'letterSpacing': '-0.03em',
+                    'fontSize': '1.8rem', 'fontWeight': '700',
+                    'color': INDIGO, 'lineHeight': '1', 'letterSpacing': '-0.025em',
                 }),
                 html.Div([
-                    html.Span('●', style={'color': INDIGO, 'fontSize': '0.55rem', 'marginRight': '5px'}),
-                    html.Span('Dragonfly', style={'color': ZN500, 'fontSize': '0.73rem'}),
-                ], style={'marginTop': '7px', 'display': 'flex', 'alignItems': 'center'}),
+                    html.Span('●', style={'color': INDIGO, 'fontSize': '0.5rem', 'marginRight': '5px'}),
+                    html.Span('Dragonfly', style={'color': ZN400, 'fontSize': '0.72rem'}),
+                ], style={'marginTop': '6px', 'display': 'flex', 'alignItems': 'center'}),
             ]),
-            html.Div(style={'width': '1px', 'background': ZN200, 'margin': '0 16px', 'alignSelf': 'stretch'}),
+            html.Div(style={'width': '1px', 'background': ZN200, 'margin': '0 14px', 'alignSelf': 'stretch'}),
             html.Div([
                 html.Div(str(v_nol), className='tabnum', style={
-                    'fontSize': '2rem', 'fontWeight': '800',
-                    'color': EMERALD, 'lineHeight': '1', 'letterSpacing': '-0.03em',
+                    'fontSize': '1.8rem', 'fontWeight': '700',
+                    'color': EMERALD, 'lineHeight': '1', 'letterSpacing': '-0.025em',
                 }),
                 html.Div([
-                    html.Span('●', style={'color': EMERALD, 'fontSize': '0.55rem', 'marginRight': '5px'}),
-                    html.Span('MATLAB', style={'color': ZN500, 'fontSize': '0.73rem'}),
-                ], style={'marginTop': '7px', 'display': 'flex', 'alignItems': 'center'}),
+                    html.Span('●', style={'color': EMERALD, 'fontSize': '0.5rem', 'marginRight': '5px'}),
+                    html.Span('MATLAB', style={'color': ZN400, 'fontSize': '0.72rem'}),
+                ], style={'marginTop': '6px', 'display': 'flex', 'alignItems': 'center'}),
             ]),
         ], style={'display': 'flex', 'alignItems': 'flex-start', 'marginBottom': '12px'}),
         html.Div([
@@ -385,27 +389,27 @@ def kpi_dual(label, v_aa, v_nol, badge_text, badge_cls='badge-info', delta_pct=N
             *([html.Span(style={'marginLeft': '8px'}), delta_chip(delta_pct)] if delta_pct is not None else []),
         ], style={'display': 'flex', 'alignItems': 'center', 'gap': '6px'}),
     ], style={
-        'background': CARD, 'borderRadius': '14px',
-        'boxShadow': '0 0 0 1px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04)',
-        'padding': '20px 22px',
+        'background': CARD, 'borderRadius': '10px',
+        'border': f'1px solid {ZN200}',
+        'padding': '18px 20px',
     }, className='hover-card')
 
 
 def kpi_single(label, value, sub=None, color=ZN900):
     return html.Div([
         html.Div(label.upper(), style={
-            'fontSize': '0.66rem', 'fontWeight': '700',
-            'color': ZN400, 'letterSpacing': '0.09em', 'marginBottom': '14px',
+            'fontSize': '0.66rem', 'fontWeight': '600',
+            'color': ZN400, 'letterSpacing': '0.08em', 'marginBottom': '12px',
         }),
         html.Div(value, className='tabnum', style={
-            'fontSize': '2rem', 'fontWeight': '800',
-            'color': color, 'lineHeight': '1', 'letterSpacing': '-0.03em', 'marginBottom': '10px',
+            'fontSize': '1.8rem', 'fontWeight': '700',
+            'color': color, 'lineHeight': '1', 'letterSpacing': '-0.025em', 'marginBottom': '8px',
         }),
-        *([html.Div(sub, style={'fontSize': '0.77rem', 'color': ZN500})] if sub else []),
+        *([html.Div(sub, style={'fontSize': '0.75rem', 'color': ZN400})] if sub else []),
     ], style={
-        'background': CARD, 'borderRadius': '14px',
-        'boxShadow': '0 0 0 1px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04)',
-        'padding': '20px 22px',
+        'background': CARD, 'borderRadius': '10px',
+        'border': f'1px solid {ZN200}',
+        'padding': '18px 20px',
     }, className='hover-card')
 
 
@@ -1021,9 +1025,10 @@ def build_comparaison():
                       'whiteSpace': 'nowrap'}),
         ])
 
-    th_s = {'background': ZN800, 'color': 'white', 'padding': '11px 14px',
-            'fontSize': '0.71rem', 'fontWeight': '700', 'textTransform': 'uppercase',
-            'letterSpacing': '0.07em', 'textAlign': 'left'}
+    th_s = {'background': ZN100, 'color': ZN500, 'padding': '10px 14px',
+            'fontSize': '0.68rem', 'fontWeight': '600', 'textTransform': 'uppercase',
+            'letterSpacing': '0.07em', 'textAlign': 'left',
+            'borderBottom': f'2px solid {ZN200}'}
 
     table = html.Table([
         html.Thead(html.Tr([
@@ -1314,8 +1319,8 @@ TAB_STYLE = dict(
     borderBottom='3px solid transparent', background='transparent',
     letterSpacing='-0.01em',
 )
-TAB_SEL = {**TAB_STYLE, 'color': ZN900, 'borderBottom': f'3px solid {INDIGO}',
-           'fontWeight': '700', 'color': INDIGO}
+TAB_SEL = {**TAB_STYLE, 'borderBottom': f'3px solid {INDIGO}',
+           'fontWeight': '700', 'color': ZN900}
 
 app = dash.Dash(__name__, title='FiberScope', suppress_callback_exceptions=True,
     external_stylesheets=[
