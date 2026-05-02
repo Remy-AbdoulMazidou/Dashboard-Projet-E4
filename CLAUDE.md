@@ -15,9 +15,9 @@ sur les mêmes échantillons (orientation des fibres, distribution de diamètre,
 - **Dashboard principal** : Python + Dash · `dashboard-reel/app.py` · port **8052**
 - **Dashboard démo** : `fiber-dashboard/app.py` · port 8050 · données simulées
 - **Environnement** : `venv/` + `requirements.txt`
-- **Lancement (Windows, Git Bash)** :
-  ```bash
-  source venv/Scripts/activate && python dashboard-reel/app.py
+- **Lancement (Windows PowerShell)** :
+  ```powershell
+  . venv\Scripts\Activate.ps1; python dashboard-reel\app.py
   ```
   → http://127.0.0.1:8052
 - **Dépendances clés** : dash, plotly, pandas, numpy, scipy, openpyxl
@@ -29,9 +29,11 @@ sur les mêmes échantillons (orientation des fibres, distribution de diamètre,
 ## Structure du repo
 ```
 fiber-dashboard/     dashboard démo multi-matériaux (données simulées, 4 onglets)
+  app.py + components.py + config.py + data.py + tab_*.py
+  assets/style.css · data/*.csv
 dashboard-reel/      dashboard principal soutenance — vraies données, port 8052
-  app.py             code unique (~1130 lignes, 5 onglets)
-  assets/style.css   design system CSS (Inter, zinc palette, badges, tabnum)
+  app.py             code unique (~1500 lignes, 5 onglets)
+  assets/style.css   design system CSS (Inter, zinc palette, shadcn/ui style)
 vrai-data/
   antoine-aymen/
     donnees_F1_recycle.csv    données Dragonfly scan réel F1 (FICHIER PRINCIPAL)
@@ -44,11 +46,19 @@ vrai-data/
     analyse_diametre.txt      stats pré-calculées sur l'épaisseur
     analyse_grandeurs_dossier.csv  paramètres JCAL (F1_originel + F1-F4_genere)
   nolhan/
-    Resultats_Fibres.xlsx  résultats MATLAB (405 composantes)
-articlesprof/        articles scientifiques fournis par l'encadrant
-docs/                docs de présentation et fiches projet
-docsmiparcours/      livrables mi-parcours
+    Resultats_Fibres.xlsx       résultats MATLAB (405 composantes)
+    correspondance-variable.pdf documentation des variables MATLAB (commité depuis 202d878)
+documentationprojet/            dossier unique de documentation (renommé depuis docs/)
+  Article_1_IJSS_preprint.pdf                           article IJSS (ex-articlesprof/)
+  Depriester_rolland_orgeas_geindreau_levrard_bremond 2022 (J. Microscopy).pdf  (ex-articlesprof/)
+  projetE4_rapport_Intermediaire_ECL.pdf                rapport intermédiaire mis à jour
 ```
+
+**Supprimés lors du nettoyage (2026-05-02) :**
+- `articlesprof/` → contenu déplacé dans `documentationprojet/` (renommés sans "(1)")
+- `docs/` (discours_oral_remy.docx, documentation_projet.pdf, rapport_dashboard_remy.docx, slides_presentation.pptx) → documents personnels, supprimés
+- `docsmiparcours/` (rapport_Intermediaire.pdf remplacé par ECL version, séance 5 docx supprimé)
+- `generate_doc.py`, `generate_rapport.py`, `generate_slides.py` → scripts utilitaires supprimés
 
 ---
 
@@ -313,11 +323,11 @@ GEN_KEYS   = ['F1_genere', 'F2_genere', 'F3_genere', 'F4_genere']
 ## État d'avancement — DASHBOARD COMPLET ✓
 
 ### Tout est opérationnel
-- `dashboard-reel/app.py` : 5 onglets, ~1130 lignes, démarrage propre
+- `dashboard-reel/app.py` : 5 onglets, ~1500 lignes, démarrage propre
 - Sortie au démarrage : `OK · 95 fibres Dragonfly · 405 composantes MATLAB · 4 échantillons générés`
-- `assets/style.css` : design system complet
+- `assets/style.css` : design system complet (style shadcn/ui, hover-card, badges)
 - `requirements.txt` : scipy + openpyxl présents
-- Tout committé et pushé sur GitHub (commit `bf86b45`)
+- Dernier commit design : `7ddf51b` — refonte visuelle shadcn/ui
 
 ### Questions en attente de réponse (avant soutenance)
 1. ~~122.96 mm³ = scan total ou ROI Dragonfly ?~~ → **✓ CONFIRMÉ : volume total du scan**
@@ -345,6 +355,4 @@ GEN_KEYS   = ['F1_genere', 'F2_genere', 'F3_genere', 'F4_genere']
 
 ## Ressources
 @./README.md
-@./docs/
-@./articlesprof/
-@./docsmiparcours/
+@./documentationprojet/
