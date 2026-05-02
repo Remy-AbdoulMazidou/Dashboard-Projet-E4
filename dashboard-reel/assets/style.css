@@ -79,3 +79,12 @@ body {
 .badge-warn  { color: #D97706; background: #FFFBEB; }
 .badge-diff  { color: #E11D48; background: #FFF1F2; }
 .badge-info  { color: #71717A; background: #F4F4F5; }
+
+/* ── Hover cards ────────────────────────────────── */
+.hover-card {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+.hover-card:hover {
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.09), 0 8px 20px rgba(0,0,0,0.09) !important;
+  transform: translateY(-2px);
+}
