@@ -84,20 +84,15 @@ L'analyse du fichier révèle une structure à deux niveaux :
 - C'est le composant connexe principal du réseau fibreux (toutes les fibres connectées entre elles)
 - Total matière labellisée tous objets confondus : **5.31 mm³** (= 5.16 + 0.15 autres)
 
-#### ⚠ QUESTION EN SUSPENS — À CONFIRMER AVEC ANTOINE
-**Le volume de 122.96 mm³ annoncé par Antoine : est-ce le volume total du scan complet, ou une ROI délimitée dans Dragonfly ?**
+#### ✓ CONFIRMÉ PAR ANTOINE — Volume global
+**Le volume de 122.96 mm³ est bien le volume total du scan complet** (confirmé par Antoine).
+Dragonfly a donc analysé l'intégralité de l'échantillon physique scanné, pas une ROI.
 
-Le fichier CSV ne contient **aucune information sur les dimensions du volume analysé** (pas de bounding box, pas de taille en voxels). On sait avec certitude que la matière labellisée = 5.31 mm³, mais on ne sait pas si le 122.96 mm³ est :
-- La **taille totale de l'échantillon** physique scanné → Dragonfly a analysé la pièce entière
-- Une **ROI choisie par Antoine** dans Dragonfly (comme Nolhan a choisi un sous-volume en MATLAB)
+- Volume total scan : **122.96 mm³**
+- Matière labellisée : **5.31 mm³** (= 31 891 188 voxels × (5.5 µm)³)
+- Porosité : 1 − 5.31/122.96 ≈ **95.7%** (cohérent avec la mesure Dragonfly ~94.5%)
 
-**Question exacte à poser à Antoine** : *"Les 122.96 mm³ c'est la taille totale du scan complet de l'échantillon, ou c'est une ROI que tu as sélectionnée dans Dragonfly ?"*
-
-**Impact sur le dashboard** :
-- Si volume total du scan → Dragonfly a analysé 100% du scan, MATLAB 3.25% → ratio volumique valide
-- Si ROI Dragonfly → les deux méthodes ont analysé des sous-volumes différents d'un même échantillon → ratio à recalculer et wording à adapter
-
-**En attendant la réponse** : le dashboard affiche 122.96 mm³ comme "volume analysé Dragonfly" avec la mention "volume total" fournie par Antoine. Le wording "volume total" est à nuancer si Antoine confirme que c'est une ROI.
+Le fichier CSV ne contient pas les dimensions du volume en voxels, mais le volume total est confirmé via Antoine.
 
 #### Fichiers générés numériquement : `donnees_F1-F4_genere.csv`
 - Séparateur `;`, encodage `utf-8-sig`
@@ -151,12 +146,13 @@ Fichier : `vrai-data/nolhan/Resultats_Fibres.xlsx`
 | | Dragonfly (Antoine) | MATLAB (Nolhan) |
 |---|---|---|
 | Matière labellisée | **5.31 mm³** (lu dans le CSV) | non mesuré directement |
-| Volume analysé déclaré | **122.96 mm³** (Antoine, source WhatsApp) | **4.00 mm³** (Nolhan, calcul 200×200×100×10³) |
+| Volume analysé | **122.96 mm³ — volume total du scan** (confirmé par Antoine) | **4.00 mm³ — sous-volume** (200×200×100 vox × (10 µm)³) |
 | Résolution | 5.5 µm/vox | ~10 µm/vox |
 | Filtre appliqué | oui : 101–100 000 voxels → 95 fibres | non : 405 composantes |
 
-**Ce qui est incertain :**
-- Nature exacte du 122.96 mm³ Dragonfly (scan complet ou ROI ?) → question en attente
+**Situation claire :**
+- Dragonfly = analyse du **scan complet** (122.96 mm³)
+- MATLAB = analyse d'un **sous-volume délimité** (4.00 mm³ = 3.25% du total)
 
 **Porosité :**
 - Estimée depuis les voxels : 1 − 5.31/122.96 ≈ **95.7%** (si 122.96 mm³ est le volume total analysé)
@@ -324,9 +320,7 @@ GEN_KEYS   = ['F1_genere', 'F2_genere', 'F3_genere', 'F4_genere']
 - Tout committé et pushé sur GitHub (commit `bf86b45`)
 
 ### Questions en attente de réponse (avant soutenance)
-1. **⚠ PRIORITÉ** : Demander à Antoine → *"Les 122.96 mm³ dans Dragonfly, c'est le scan total ou une ROI ?"*
-   - Réponse "scan total" → statu quo, dashboard correct
-   - Réponse "ROI" → mettre à jour le wording onglet 1 et onglet 4 (retirer "volume total", dire "volume ROI Dragonfly")
+1. ~~122.96 mm³ = scan total ou ROI Dragonfly ?~~ → **✓ CONFIRMÉ : volume total du scan**
 2. Clarifier pourquoi F2_genere et F4_genere ont des stats quasi-identiques (à vérifier avec Antoine)
 
 ### Pistes d'amélioration optionnelles (post-soutenance)
